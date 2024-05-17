@@ -1,11 +1,13 @@
-from fastapi import status, HTTPException, Depends, APIRouter, Body
-from enum import Enum
 from datetime import timedelta
-from dotenv import dotenv_values
-from . import service
-from .dto import CompletionDto
+from enum import Enum
 
-route = APIRouter(prefix='/core')
+from dotenv import dotenv_values
+from fastapi import APIRouter, Body, Depends, HTTPException, status
+
+from . import service
+from .dto.completion import CompletionDto
+
+route = APIRouter(prefix="/core")
 
 
 class Tag(Enum):
@@ -21,9 +23,7 @@ class Tag(Enum):
     status_code=status.HTTP_200_OK,
     tags=[Tag.llm],
 )
-
 async def search(body: CompletionDto):
     [prompt] = body
-    rag_result = await service.search_rag(prompt)
-    msg_result = await service.ask_llm(rag_result)
-    return {"data": msg_result, "code": status.HTTP_200_OK, "msg": "暂无"}
+    result = await service.ask_to_llm(prompt)
+    return {"data": result, "code": status.HTTP_200_OK, "msg": "暂无"}

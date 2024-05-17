@@ -1,0 +1,6 @@
+uvicorn
+langchain
+pydantic
+fastapi
+dotenv
+
