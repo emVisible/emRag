@@ -3,3 +3,4 @@ pydantic
 fastapi
 python-dotenv
 uvicorn[standard]
+sentence-transformers

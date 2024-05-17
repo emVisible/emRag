@@ -23,7 +23,7 @@ class Tag(Enum):
     tags=[Tag.llm],
 )
 async def search(body: CompletionDto):
-    [prompt] = body
+    prompt = body.prompt
     context = await service.similarity_search(question=prompt)
     result = await service.ask_to_llm(question=prompt, context=context)
     return {"data": result, "code": status.HTTP_200_OK, "msg": "暂无"}

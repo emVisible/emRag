@@ -18,6 +18,7 @@ db_addr = PathConfig.DB_ADDR
 query_quantity = RAGConfig.QUERY_QUANTITY
 model_path = PathConfig.MODEL_PATH
 
+print(model_path)
 
 # 通过LangChain加载ChatGLM3模型
 @log("ChatGLM3模型加载中... (init)")
