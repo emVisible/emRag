@@ -1,14 +1,11 @@
 from os.path import abspath
 from dotenv import load_dotenv, get_key
-import os
 
-# 加载 .env 文件
 load_dotenv()
-
 class PathConfig:
     # 获取 .env 文件中的 MODEL_PATH 值，如果不存在则使用默认值
     _model_path = get_key(".env", "MODEL_PATH")
-    if not _model_path:
+    if not _model_path or len(_model_path) == 0:
         MODEL_PATH = "THUDM/chatglm3-6b"
     else:
         MODEL_PATH = abspath(_model_path)
