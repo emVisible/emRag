@@ -8,14 +8,13 @@ from langchain.embeddings.sentence_transformer import \
 from langchain.vectorstores import Chroma
 from langchain_core.messages import AIMessage, HumanMessage
 
-from llm.glm import ChatGLM3
-from utils import log
+from .llm.glm import ChatGLM3
+from .utils import log
 
-from ..config import PathConfig, RAGConfig
+from config import PathConfig, RAGConfig
 
 # 加载配置
 db_addr = PathConfig.DB_ADDR
-embedding_model = PathConfig.EMBEDDING_MODEL
 query_quantity = RAGConfig.QUERY_QUANTITY
 model_path = PathConfig.MODEL_PATH
 
@@ -39,7 +38,7 @@ def load_glm():
 async def similarity_search(question: str) -> str:
     res = ""
     # 向量数据库初始化: 嵌入函数、数据库实例、提问文本
-    embedding_function = SentenceTransformerEmbeddings(model_name=embedding_model)
+    embedding_function = SentenceTransformerEmbeddings(model_name=model_path)
     db = Chroma(persist_directory=db_addr, embedding_function=embedding_function)
     question = f"{question or '介绍一下杭州'}"
     # 从向量数据库中查询相关信息
@@ -53,11 +52,11 @@ async def similarity_search(question: str) -> str:
 
 # 结合模糊搜索的结果, 与大模型对话得出答案
 @log("模型回答中... (2/2)")
-async def ask_to_llm(question: str) -> str:
+async def ask_to_llm(question: str, context:str) -> str:
     # 获取模糊搜索结果, 作为向模型传输的上下文
-    context = await similarity_search(question=question)
     prompt_template = f"""
-    你现在扮演一名辅助教师, 细心听着以下的问题作出解答, 如若无法从信息中提取相关的答案, 请说\"无法回答该问题\"之类的话语:
+    你现在扮演一名辅助教师, 细心听着以下的问题作出解答,
+    如若无法从信息中提取相关的答案, 请说\"无法回答该问题\"之类的话语:
     已知信息:
     {context}
     问题:

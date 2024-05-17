@@ -1,6 +1,5 @@
-uvicorn
 langchain
 pydantic
 fastapi
-dotenv
-
+python-dotenv
+uvicorn[standard]

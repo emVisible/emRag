@@ -4,7 +4,7 @@ from dotenv import dotenv_values
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from src.controller import route
-from src.llm.llm import llm_route
+# from src.llm.llm import llm_route
 
 
 def swagger_monkey_patch(*args, **kwargs):
@@ -20,7 +20,7 @@ def swagger_monkey_patch(*args, **kwargs):
 app = FastAPI(title="pracLangchain", version="1.0.0")
 # 导入路由
 app.include_router(route, prefix="/api")
-app.include_router(llm_route, prefix="/api")
+# app.include_router(llm_route, prefix="/api")
 # 跨域中间件
 app.add_middleware(CORSMiddleware, allow_origins=["127.0.0.1:5173"])
 

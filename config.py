@@ -1,11 +1,11 @@
 from enum import Enum
 from os.path import abspath
+from dotenv import get_key
 
 
 class PathConfig(Enum):
+    MODEL_PATH = "THUDM/chatglm3-6b"
     DOC_ADDR = abspath("./docs")
-    EMBEDDING_MODEL = abspath("...")
-    MODEL_PATH = abspath("...")
     DB_ADDR = abspath("./db_vector")
 
 
