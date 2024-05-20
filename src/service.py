@@ -56,14 +56,15 @@ async def similarity_search(question: str) -> str:
 async def ask_to_llm(question: str, context:str) -> str:
     # 获取模糊搜索结果, 作为向模型传输的上下文
     prompt_template = f"""
-    你现在扮演一名辅助教师, 细心听着以下的问题作出解答,
-    如若无法从信息中提取相关的答案, 请说\"无法回答该问题\"之类的话语:
-    已知信息:
-    {context}
-    问题:
-    {question}
+    「任务描述」
+      - 根据用户提供的上下文信息回答问题, 遵守回答要求作出解答。
+      - 你现在扮演一名辅助教师, 基于以下的已知信息并细心听着给出的问题作出解答。
+    「已知信息」:
+      {context}
+    「问题」:
+      - 如若无法从信息中提取相关的答案, 请说\"无法回答该问题\"之类的话语。
+      {question}
     """
-
     # 加载模型
     agent = load_glm()
     # 向模型发送模板请求
