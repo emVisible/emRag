@@ -1,4 +1,13 @@
 langchain
+langchain-community
+protobuf
+transformers==4.30.2
+cpm_kernels
+torch>=2.0
+gradio
+mdtex2html
+sentencepiece
+accelerate
 pydantic
 fastapi
 python-dotenv

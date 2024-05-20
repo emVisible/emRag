@@ -29,12 +29,10 @@ app.add_middleware(CORSMiddleware, allow_origins=["127.0.0.1:5173"])
 def root_page():
     return {"pracLangchain": "Hello World!"}
 
-
 def run():
     mode = dotenv_values(".env").get("MODE")
     if mode == "DEV":
         import uvicorn
-
         uvicorn.run(
             "main:app",
             host="127.0.0.1",
