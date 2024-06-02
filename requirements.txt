@@ -29,3 +29,5 @@ galore-torch
 loguru
 tiktoken
 chromadb
+unstructured
+python-docx
