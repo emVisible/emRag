@@ -1,38 +1,59 @@
+from src.base.database import engine
+from src.base.middleware import CORSMiddleware, origins
+from src.base.models import Base
+from src.base.controller import route_base
+from src.rag.controller import route_rag
+from src.llm.llm import route_llm
 from fastapi import FastAPI
 from fastapi.openapi.docs import get_swagger_ui_html
 from dotenv import dotenv_values
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from src.controller import route
-# from src.llm.llm import llm_route
+import torch
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    yield
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+        torch.cuda.ipc_collect()
+
+
+# Swagger文档
 def swagger_monkey_patch(*args, **kwargs):
     return get_swagger_ui_html(
-        *args,
-        **kwargs,
         swagger_js_url="https://cdn.bootcdn.net/ajax/libs/swaqqer-ui/5.6.2/swagqer-ui-bundle.js",
         swagger_css_url="https://cdn.bootcdn.net/ajax/libs/swagger-ui/5.6.2/swagger-ui.min.css"
+        * args,
+        **kwargs
     )
 
 
+# 初始化数据库
+Base.metadata.create_all(bind=engine)
 # 初始化app实例
-app = FastAPI(title="pracLangchain", version="1.0.0")
+app = FastAPI(title="ZISU-RAG", version="1.0.0", lifespan=lifespan)
+route_prefix = "/api"
 # 导入路由
-app.include_router(route, prefix="/api")
-# app.include_router(llm_route, prefix="/api")
+app.include_router(route_base, prefix=route_prefix)
+app.include_router(route_llm, prefix=route_prefix)
+app.include_router(route_rag, prefix=route_prefix)
 # 跨域中间件
-app.add_middleware(CORSMiddleware, allow_origins=["127.0.0.1:5173"])
+app.add_middleware(CORSMiddleware, allow_origins=origins)
 
 
-@app.get("/api")
+@app.get("/")
 def root_page():
-    return {"pracLangchain": "Hello World!"}
+    return {"ZISU-RAG": "后端启动成功"}
 
+
+# 通过命令行运行的uvicorn封装
 def run():
     mode = dotenv_values(".env").get("MODE")
     if mode == "DEV":
         import uvicorn
+
         uvicorn.run(
             "main:app",
             host="127.0.0.1",

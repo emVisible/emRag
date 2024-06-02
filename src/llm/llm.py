@@ -12,31 +12,30 @@ from typing import List, Literal, Optional, Union
 from loguru import logger
 from pydantic import BaseModel, Field
 from transformers import AutoTokenizer, AutoModel
-from src.llm.utils import process_response, generate_chatglm3, generate_stream_chatglm3
+from .utils import process_response, generate_chatglm3, generate_stream_chatglm3
 from sentence_transformers import SentenceTransformer
 from dotenv import get_key
 from sse_starlette.sse import EventSourceResponse
 
+route_llm = APIRouter(prefix="/llm")
+
 # Set up limit request time
 EventSourceResponse.DEFAULT_PING_INTERVAL = 1000
 
-# set LLM path
-MODEL_PATH = None
-path = get_key(".\.env", "MODEL_PATH")
-if not path:
-  MODEL_PATH = "THUDM/chatglm3-6b"
-else:
-  MODEL_PATH = os.path.abspath(get_key(".\.env", "MODEL_PATH"))
-
-TOKENIZER_PATH = MODEL_PATH
-
-# set Embedding Model path
-EMBEDDING_PATH = os.environ.get("EMBEDDING_PATH", "BAAI/bge-large-zh-v1.5")
+MODEL_PATH = get_key(".\.env", "MODEL_PATH") or "THUDM/chatglm3-6b"
+TOKENIZER_PATH = get_key(".\.env", "TOKENIZER_PATH") or MODEL_PATH
+EMBEDDING_PATH = get_key(".\.env", "EMBEDDING_PATH") or "BAAI/bge-large-zh-v1.5"
 
 print(MODEL_PATH)
+print(TOKENIZER_PATH)
 print(EMBEDDING_PATH)
 
-llm_route = APIRouter(prefix="/llm")
+
+tokenizer = AutoTokenizer.from_pretrained(TOKENIZER_PATH, trust_remote_code=True)
+model = AutoModel.from_pretrained(
+    MODEL_PATH, trust_remote_code=True, device_map="auto"
+).eval()
+embedding_model = SentenceTransformer(EMBEDDING_PATH, device="cuda")
 
 
 class ModelCard(BaseModel):
@@ -134,13 +133,13 @@ class ChatCompletionResponse(BaseModel):
     usage: Optional[UsageInfo] = None
 
 
-@llm_route.get("/health", tags=['LLM'])
+@route_llm.get("/health", tags=["LLM"])
 async def health() -> Response:
     """Health check."""
     return Response(status_code=200)
 
 
-@llm_route.post("/embeddings", response_model=EmbeddingResponse,  tags=['LLM'])
+@route_llm.post("/embeddings", response_model=EmbeddingResponse, tags=["LLM"])
 async def get_embeddings(request: EmbeddingRequest):
     embeddings = [embedding_model.encode(text) for text in request.input]
     embeddings = [embedding.tolist() for embedding in embeddings]
@@ -170,13 +169,13 @@ async def get_embeddings(request: EmbeddingRequest):
     return response
 
 
-@llm_route.get("/models", response_model=ModelList, tags=['LLM'])
+@route_llm.get("/models", response_model=ModelList, tags=["LLM"])
 async def list_models():
     model_card = ModelCard(id="chatglm3-6b")
     return ModelList(data=[model_card])
 
 
-@llm_route.post("/completions", response_model=ChatCompletionResponse,  tags=['LLM'])
+@route_llm.post("/completions", response_model=ChatCompletionResponse, tags=["LLM"])
 async def create_chat_completion(request: ChatCompletionRequest):
     global model, tokenizer
 
@@ -478,20 +477,3 @@ def contains_custom_function(value: str) -> bool:
     :return:
     """
     return value and "get_" in value
-
-tokenizer = None
-model = None
-embedding_model = None
-
-def run_llm():
-    global tokenizer
-    global model
-    global embedding_model
-    tokenizer = AutoTokenizer.from_pretrained(TOKENIZER_PATH, trust_remote_code=True)
-    model = AutoModel.from_pretrained(
-        MODEL_PATH, trust_remote_code=True, device_map="auto"
-    ).eval()
-    # load Embedding
-    embedding_model = SentenceTransformer(EMBEDDING_PATH, device="cuda")
-
-run_llm() # 开发时可以注释掉
