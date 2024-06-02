@@ -1,9 +1,5 @@
-from datetime import timedelta
 from enum import Enum
-
-from dotenv import dotenv_values
-from fastapi import APIRouter, Body, Depends, HTTPException, status
-
+from fastapi import APIRouter,  status
 from . import service
 from .dto.completion import CompletionDto
 

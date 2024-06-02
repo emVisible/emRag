@@ -46,30 +46,3 @@ app.add_middleware(CORSMiddleware, allow_origins=origins)
 @app.get("/")
 def root_page():
     return {"ZISU-RAG": "后端启动成功"}
-
-
-# 通过命令行运行的uvicorn封装
-def run():
-    mode = dotenv_values(".env").get("MODE")
-    if mode == "DEV":
-        import uvicorn
-
-        uvicorn.run(
-            "main:app",
-            host="127.0.0.1",
-            port=int(dotenv_values(".env").get("DEV_PORT")),
-            reload=True,
-        )
-
-    elif mode == "PRO":
-        import uvicorn
-
-        uvicorn.run(
-            "main:app", host="0.0.0.0", port=int(dotenv_values(".env").get("PRO_PORT"))
-        )
-    else:
-        raise RuntimeError("Please check the .env file.")
-
-
-if __name__ == "__main__":
-    run()
