@@ -1,5 +1,5 @@
 from os import getenv
-from os.path import dirname, join, abspath
+from os.path import join, abspath
 from dotenv import load_dotenv
 
 env_path = join(abspath("./"), ".env")

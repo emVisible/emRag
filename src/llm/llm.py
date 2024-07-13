@@ -1,35 +1,38 @@
-import os
 import time
+from contextlib import asynccontextmanager
+from os import getenv
+from os.path import abspath, join
+from typing import List, Literal, Optional, Union
+
 import tiktoken
 import torch
 import uvicorn
-
-from fastapi import FastAPI, HTTPException, Response, APIRouter
+from dotenv import get_key, load_dotenv
+from fastapi import APIRouter, FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
-
-from contextlib import asynccontextmanager
-from typing import List, Literal, Optional, Union
 from loguru import logger
 from pydantic import BaseModel, Field
-from transformers import AutoTokenizer, AutoModel
-from .utils import process_response, generate_chatglm3, generate_stream_chatglm3
 from sentence_transformers import SentenceTransformer
-from dotenv import get_key
 from sse_starlette.sse import EventSourceResponse
+from transformers import AutoModel, AutoTokenizer
+
+from .utils import (generate_chatglm3, generate_stream_chatglm3,
+                    process_response)
 
 route_llm = APIRouter(prefix="/llm")
-
-# Set up limit request time
 EventSourceResponse.DEFAULT_PING_INTERVAL = 1000
 
-MODEL_PATH = get_key(".\.env", "MODEL_PATH") or "THUDM/chatglm3-6b"
-TOKENIZER_PATH = get_key(".\.env", "TOKENIZER_PATH") or MODEL_PATH
-EMBEDDING_PATH = get_key(".\.env", "EMBEDDING_PATH") or "BAAI/bge-large-zh-v1.5"
+MODEL_PATH = getenv("MODEL_PATH",  "THUDM/chatglm3-6b")
+TOKENIZER_PATH = getenv("TOKENIZER_PATH", MODEL_PATH)
+EMBEDDING_PATH = getenv("EMBEDDING_PATH", "BAAI/bge-large-zh-v1.5")
 
-print(MODEL_PATH)
-print(TOKENIZER_PATH)
-print(EMBEDDING_PATH)
+def log_path():
+  max_length = 200
+  print(f"[LLM-CONFIG] llm model path: {MODEL_PATH}".ljust(max_length))
+  print(f"[LLM-CONFIG] tokenizer model path: {TOKENIZER_PATH}".ljust(max_length))
+  print(f"[LLM-CONFIG] embedding model path: {EMBEDDING_PATH}".ljust(max_length))
 
+log_path()
 
 tokenizer = AutoTokenizer.from_pretrained(TOKENIZER_PATH, trust_remote_code=True)
 model = AutoModel.from_pretrained(
