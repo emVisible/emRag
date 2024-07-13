@@ -36,11 +36,11 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(title="ZISU-RAG", version="1.0.0", lifespan=lifespan)
 route_prefix = "/api"
 # 导入路由
-app.include_router(route_base, prefix=route_prefix)
-app.include_router(route_llm, prefix=route_prefix)
+# app.include_router(route_base, prefix=route_prefix)
+# app.include_router(route_llm, prefix=route_prefix)
 app.include_router(route_rag, prefix=route_prefix)
 # 跨域中间件
-app.add_middleware(CORSMiddleware, allow_origins=origins)
+# app.add_middleware(CORSMiddleware, allow_origins=origins)
 
 
 @app.get("/")
