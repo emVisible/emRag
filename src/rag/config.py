@@ -1,20 +1,22 @@
-from os.path import abspath
-from dotenv import load_dotenv, get_key
+from os import getenv
+from os.path import dirname, join
 
-load_dotenv()
+from dotenv import load_dotenv
+
+base_dir = dirname(__file__)
+env_path = join(base_dir, ".env")
+load_dotenv(dotenv_path=env_path)
 
 
 class PathConfig:
-    _model_path = get_key(".env", "MODEL_PATH")
-    MODEL_PATH = abspath(_model_path) or "THUDM/chatglm3-6b"
-    DOC_ADDR = abspath("docs")
-    DB_ADDR = abspath("db_vector")
+    MODEL_PATH = getenv("MODEL_PATH", "THUDM/chatglm3-6b")
+    DOC_ADDR = getenv("DOC_ADDR", "docs")
+    DB_ADDR = getenv("DB_ADDR", "db_vector")
 
 
 class RAGConfig:
-    _embedding_path = get_key(".env", "EMBEDDING_PATH")
-    EMBEDDING_MODEL_PATH = (
-        abspath(_embedding_path) or "shibing624_text2vec-base-chinese-paraphrase"
+    EMBEDDING_MODEL_PATH = getenv(
+        "EMBEDDING_PATH", "shibing624_text2vec-base-chinese-paraphrase"
     )
     CHUNK_SIZE = 500
     CHUNK_OVERLAP = 50
