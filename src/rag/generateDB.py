@@ -25,7 +25,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.embeddings import SentenceTransformerEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain.docstore.document import Document
-from config import PathConfig, RAGConfig
+from rag.config import PathConfig, RAGConfig
 
 # 加载配置
 # db_addr = PathConfig.DB_ADDR

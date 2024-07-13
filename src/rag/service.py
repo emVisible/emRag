@@ -2,7 +2,7 @@ from langchain_community.embeddings import SentenceTransformerEmbeddings
 from langchain_community.vectorstores import Chroma
 
 from ..utils import log
-from ...config import PathConfig, RAGConfig
+from .config import PathConfig, RAGConfig
 
 # 加载配置
 db_addr = PathConfig.DB_ADDR
