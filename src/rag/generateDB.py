@@ -37,7 +37,7 @@ chunk_size = RAGConfig.CHUNK_SIZE
 chunk_overlap = RAGConfig.CHUNK_OVERLAP
 output_dir = PathConfig.DB_ADDR
 
-embeddings_model_name = RAGConfig.EMBEDDING_MODEL
+embeddings_model_name = RAGConfig.EMBEDDING_MODEL_PATH
 k = RAGConfig.QUERY_QUANTITY
 
 

@@ -2,12 +2,13 @@ from langchain_community.embeddings import SentenceTransformerEmbeddings
 from langchain_community.vectorstores import Chroma
 
 from ..utils import log
-from .config import PathConfig, RAGConfig
+from ...config import PathConfig, RAGConfig
 
 # 加载配置
 db_addr = PathConfig.DB_ADDR
 query_quantity = RAGConfig.QUERY_QUANTITY
-model_path = RAGConfig.EMBEDDING_MODEL
+model_path = RAGConfig.EMBEDDING_MODEL_PATH
+
 
 # rag文档检索, 通过文本转换为向量, 生成结果
 @log("RAG搜索中... (1/2)")
@@ -20,7 +21,7 @@ async def similarity_search(question: str) -> str:
     for chunk in context:
         print(f"chunk元数据: {chunk.metadata}")
         res += chunk.page_content
-    res = res.replace('\n','')
+    res = res.replace("\n", "")
     return res
 
 
