@@ -15,6 +15,7 @@ LLM:
 - swagger (通过外网CDN加载)
 
 ## 项目目录
+```
 |- db_vector 向量数据库
 |- docs      外部文档
 |- BAAI
@@ -47,7 +48,7 @@ LLM:
 |  main         入口文件
 |  requirements 依赖
 |  sql_app.db   sqlite文件
-
+```
 ## 项目启动
 ```
   # 安装项目所需依赖
