@@ -18,9 +18,6 @@ LLM:
 ```
 |- db_vector 向量数据库
 |- docs      外部文档
-|- BAAI
-  |- bge-large-zh-v1.5 词嵌入模型
-|- shibing624_text2vec-base-chinese-paraphrase 词嵌入模型
 |- src
   |- base
     | controller
@@ -31,10 +28,7 @@ LLM:
     | schemas
     | service_auth
     | service_user
-  |- finetune   LLAMA-Factory 微调代码
-  |- llm        GLM3模型相关代码
-    |  llm      GLM3路由与服务
-    |  utils    工具函数
+  |- finetune   基于LLAMA-Factory的微调代码
   |- rag
     |- dto        数据传输对象
      controller 控制器
@@ -44,23 +38,28 @@ LLM:
      generateDB 向量数据转换
   | utils       工具函数
 |  .env         环境变量
-|  automation   自动化脚本
 |  main         入口文件
 |  requirements 依赖
 |  sql_app.db   sqlite文件
 ```
-## 项目启动
+## 依赖安装
 ```
   # 安装项目所需依赖
   > pip install -r requirements.txt
 ```
 
+## 项目启动
+启动Xinference
 ```
-  # 启动项目
+  > XINFERENCE_MODEL_SRC=modelscope xinference-local --host 0.0.0.0 --port 9997
+```
+
+启动项目
+```
   > uvicorn main:app --port 3000
 ```
 
+进入swagger文档
 ```
-  进入swagger文档
   > http://127.0.0.1:3000/docs
 ```

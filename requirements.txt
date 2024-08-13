@@ -31,3 +31,4 @@ tiktoken
 chromadb
 unstructured
 python-docx
+xinference[all]

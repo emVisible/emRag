@@ -7,13 +7,11 @@ from .config import PathConfig, RAGConfig
 # 加载配置
 db_addr = PathConfig.DB_ADDR
 query_quantity = RAGConfig.QUERY_QUANTITY
-model_path = RAGConfig.EMBEDDING_MODEL_PATH
-
 
 # rag文档检索, 通过文本转换为向量, 生成结果
 @log("RAG搜索中... (1/2)")
 async def similarity_search(question: str) -> str:
-    embedding_function = SentenceTransformerEmbeddings(model_name=model_path)
+    embedding_function = SentenceTransformerEmbeddings()
     db = Chroma(persist_directory=db_addr, embedding_function=embedding_function)
     question = f"{question or '介绍一下杭州'}"
     context = db.similarity_search(query=question, k=query_quantity)

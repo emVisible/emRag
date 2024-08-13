@@ -3,7 +3,7 @@ from src.base.middleware import CORSMiddleware, origins
 from src.base.models import Base
 from src.base.controller import route_base
 from src.rag.controller import route_rag
-from src.llm.llm import route_llm
+from fastapi.responses import RedirectResponse
 from fastapi import FastAPI
 from fastapi.openapi.docs import get_swagger_ui_html
 from dotenv import dotenv_values
@@ -37,7 +37,6 @@ app = FastAPI(title="ZISU-RAG", version="1.0.0", lifespan=lifespan)
 route_prefix = "/api"
 # 导入路由
 # app.include_router(route_base, prefix=route_prefix)
-# app.include_router(route_llm, prefix=route_prefix)
 app.include_router(route_rag, prefix=route_prefix)
 # 跨域中间件
 # app.add_middleware(CORSMiddleware, allow_origins=origins)
@@ -45,4 +44,4 @@ app.include_router(route_rag, prefix=route_prefix)
 
 @app.get("/")
 def root_page():
-    return {"ZISU-RAG": "后端启动成功"}
+    return RedirectResponse("/docs")
