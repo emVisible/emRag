@@ -15,24 +15,18 @@ from pydantic import BaseModel, Field
 from sentence_transformers import SentenceTransformer
 from sse_starlette.sse import EventSourceResponse
 from transformers import AutoModel, AutoTokenizer
-
+from src.utils import log_path
 from .utils import (generate_chatglm3, generate_stream_chatglm3,
                     process_response)
 
 route_llm = APIRouter(prefix="/llm")
 EventSourceResponse.DEFAULT_PING_INTERVAL = 1000
 
-MODEL_PATH = getenv("MODEL_PATH",  "THUDM/chatglm3-6b")
-TOKENIZER_PATH = getenv("TOKENIZER_PATH", MODEL_PATH)
-EMBEDDING_PATH = getenv("EMBEDDING_PATH", "BAAI/bge-large-zh-v1.5")
+MODEL_PATH = getenv("MODEL_PATH") or "THUDM/chatglm3-6b"
+TOKENIZER_PATH = getenv("TOKENIZER_PATH") or MODEL_PATH
+EMBEDDING_PATH = getenv("EMBEDDING_PATH") or "BAAI/bge-large-zh-v1.5"
 
-def log_path():
-  max_length = 200
-  print(f"[LLM-CONFIG] llm model path: {MODEL_PATH}".ljust(max_length))
-  print(f"[LLM-CONFIG] tokenizer model path: {TOKENIZER_PATH}".ljust(max_length))
-  print(f"[LLM-CONFIG] embedding model path: {EMBEDDING_PATH}".ljust(max_length))
-
-log_path()
+log_path(MODEL_PATH, TOKENIZER_PATH, EMBEDDING_PATH)
 
 tokenizer = AutoTokenizer.from_pretrained(TOKENIZER_PATH, trust_remote_code=True)
 model = AutoModel.from_pretrained(

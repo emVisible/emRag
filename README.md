@@ -7,12 +7,12 @@
 ## 技术栈
 LLM:
 - LangChain
-- ChatGLM3
+- ChatGLM3(默认)
 后端功能:
 - FastApi
 - pydantic
 文档:
-- swagger (通过外网CDN加载)
+- swagger (CDN)
 
 ## 项目目录
 ```
