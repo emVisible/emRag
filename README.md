@@ -7,7 +7,7 @@
 ## 技术栈
 LLM:
 - LangChain
-- ChatGLM3
+- Qwen2-instruct(暂定)
 后端功能:
 - FastApi
 - pydantic
@@ -43,17 +43,40 @@ LLM:
 |  sql_app.db   sqlite文件
 ```
 ## 依赖安装
+所需依赖安装
 ```
   # 安装项目所需依赖
   > pip install -r requirements.txt
 ```
 
-## 项目启动
 启动Xinference
+Linux下启动
 ```
-  > XINFERENCE_MODEL_SRC=modelscope xinference-local --host 0.0.0.0 --port 9997
+  XINFERENCE_MODEL_SRC=modelscope xinference-local --host 0.0.0.0 --port 9997
+```
+windows下启动
+```
+  设置环境变量
+  > set XINFERENCE_MODEL_SRC=modelscope
+  启动
+  > xinference-local --host 127.0.0.1 --port 9997
 ```
 
+模型安装
+按最低配置, 较低档次的16G内存的核显轻薄本完全可以流畅运行, 内存占用大概会到90%, 运行时关掉其它内存占用较大的应用
+低配置的LLM问答输出会较慢, 这是正常的
+打开本地9997端口, 下载两个模型:
+   - LLM模型: Qwen2-instruct
+     - Model Engine: transformers
+     - Model Format: pytorch
+     - Model Size: 根据自己电脑情况选, 越大性能要求越高
+     - Quantization: 同上, None性能要求最高
+     - N-GPU: auto
+     - Replica: 1
+   - Embedding模型: Bge-large-zh-v1.5
+     - 按默认下载, CPU运行的, Device中选择CPU
+
+## 项目启动
 启动项目
 ```
   > uvicorn main:app --port 3000
