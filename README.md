@@ -8,9 +8,11 @@
 LLM:
 - LangChain
 - ChatGLM3(默认)
+
 后端功能:
 - FastApi
 - pydantic
+
 文档:
 - swagger (CDN)
 
