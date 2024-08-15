@@ -1,5 +1,7 @@
 langchain
 langchain-community
+langchain-chroma
+nltk==3.8.1
 protobuf
 transformers>=4.37.2
 cpm_kernels

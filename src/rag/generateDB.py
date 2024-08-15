@@ -2,6 +2,7 @@
 import os
 import glob
 from typing import List
+from src.utils import log
 
 # import torch
 from multiprocessing import Pool
@@ -22,26 +23,28 @@ from langchain_community.document_loaders import (
 )
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.embeddings import SentenceTransformerEmbeddings
-from langchain_community.vectorstores import Chroma
+from langchain_community.embeddings import XinferenceEmbeddings
+from langchain_chroma import Chroma
 from langchain.docstore.document import Document
-from rag.config import PathConfig, RAGConfig
+from .config import RAGConfig
 
 # 加载配置
-# db_addr = PathConfig.DB_ADDR
-# query_quantity = RAGConfig.QUERY_QUANTITY
-# model_path = PathConfig.MODEL_PATH
-source_directory = PathConfig.DOC_ADDR
 
+query_quantity = RAGConfig.QUERY_QUANTITY
 chunk_size = RAGConfig.CHUNK_SIZE
 chunk_overlap = RAGConfig.CHUNK_OVERLAP
-output_dir = PathConfig.DB_ADDR
 
-embeddings_model_name = RAGConfig.EMBEDDING_MODEL_PATH
+source_directory = os.getenv("DOC_ADDR")
+db_dir = os.getenv("DB_ADDR")
+
+xinference_embedding_model_id = (
+    os.getenv("XINFERENCE_EMBEDDING_MODEL_ID") or "bge-large-zh-v1.5"
+)
+xinference_addr = os.getenv("XINFERENCE_ADDR") or "http://127.0.0.1:9997"
 k = RAGConfig.QUERY_QUANTITY
 
 
-# Custom document loaders 自定义文档加载
+# 自定义文档加载器 document loader
 class MyElmLoader(UnstructuredEmailLoader):
     """Wrapper to fallback to text/plain when default does not work"""
 
@@ -64,7 +67,7 @@ class MyElmLoader(UnstructuredEmailLoader):
         return doc
 
 
-# Map file extensions to document loaders and their arguments
+# document loader 映射表
 LOADER_MAPPING = {
     ".csv": (CSVLoader, {}),
     ".doc": (UnstructuredWordDocumentLoader, {}),
@@ -84,20 +87,17 @@ LOADER_MAPPING = {
 }
 
 
+# 加载单个文档
 def load_single_document(file_path: str) -> List[Document]:
     ext = "." + file_path.rsplit(".", 1)[-1]
     if ext in LOADER_MAPPING:
         loader_class, loader_args = LOADER_MAPPING[ext]
         loader = loader_class(file_path, **loader_args)
         return loader.load()
+    raise ValueError(f"不支持的格式 .'{ext}'")
 
-    raise ValueError(f"Unsupported file extension '{ext}'")
-
-
+# 加载多个文档
 def load_documents(source_dir: str, ignored_files: List[str] = []) -> List[Document]:
-    """
-    Loads all documents from the source documents directory, ignoring specified files
-    """
     all_files = []
     for ext in LOADER_MAPPING:
         all_files.extend(
@@ -110,7 +110,7 @@ def load_documents(source_dir: str, ignored_files: List[str] = []) -> List[Docum
     with Pool(processes=os.cpu_count()) as pool:
         results = []
         with tqdm(
-            total=len(filtered_files), desc="Loading new documents", ncols=80
+            total=len(filtered_files), desc="文档加载中", ncols=80
         ) as pbar:
             for i, docs in enumerate(
                 pool.imap_unordered(load_single_document, filtered_files)
@@ -121,34 +121,25 @@ def load_documents(source_dir: str, ignored_files: List[str] = []) -> List[Docum
     return results
 
 
+@log("矢量库创建中")
 def process_documents(ignored_files: List[str] = []) -> List[Document]:
-    """
-    Load documents and split in chunks
-    """
-    print(f"Loading documents from {source_directory}")
+    print(f"文档加载中: 源自 {source_directory}")
     documents = load_documents(source_directory, ignored_files)
     if not documents:
-        print("No new documents to load")
+        print("没有可加载的文档")
         exit(0)
-    print(f"Loaded {len(documents)} new documents from {source_directory}")
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size, chunk_overlap=chunk_overlap
     )
     texts = text_splitter.split_documents(documents)
-    print(f"Split into {len(texts)} chunks of text (max. {chunk_size} tokens each)")
+    print(f"Chunks分割: {len(texts)} (最大为 {chunk_size} tokens)")
     return texts
 
 
-def main():
-    print("Creating new vectorstore")
+
+def run():
     texts = process_documents()
-    print(f"Creating embeddings. May take some minutes...")
-    embedding_function = SentenceTransformerEmbeddings(model_name=embeddings_model_name)
-    db = Chroma.from_documents(texts, embedding_function, persist_directory=output_dir)
-    db.persist()
-    db = None
-
-
-if __name__ == "__main__":
-    main()
-    print("DONE!")
+    embedding_function = XinferenceEmbeddings(
+        server_url=xinference_addr, model_uid=xinference_embedding_model_id
+    )
+    Chroma.from_documents(texts, embedding_function, persist_directory=db_dir)
