@@ -20,23 +20,25 @@ LLM:
 |- docs      外部文档
 |- src
   |- base
+    |- auth     权限相关
+      | service_auth
     | controller
-    | database
-    | exceptions
+    | database    数据库Engine
+    | exceptions  容错处理
     | middleware
-    | models
-    | schemas
-    | service_auth
+    | models      Models
+    | schemas     Schemas
+    | service_init
     | service_user
-  |- finetune   基于LLAMA-Factory的微调代码
-  |- rag
+  |- llm        大模型相关
+  |- rag        RAG相关
     |- dto        数据传输对象
-     controller 控制器
-     service    服务
-     utils      工具函数
-     config     RAG配置
-     generateDB 向量数据转换
+    | controller
+    | service
+    | config      配置类
+    | document_loader  文档向量化loader
   | utils       工具函数
+|  tmp          临时上传文件
 |  .env         环境变量
 |  main         入口文件
 |  requirements 依赖
@@ -77,7 +79,7 @@ LLM:
 启动Xinference
 Linux下启动
 ```
-  XINFERENCE_MODEL_SRC=modelscope xinference-local --host 0.0.0.0 --port 9997
+  > XINFERENCE_MODEL_SRC=modelscope xinference-local --host 0.0.0.0 --port 9997
 ```
 windows下启动
 ```

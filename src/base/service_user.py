@@ -1,57 +1,77 @@
-from sqlalchemy.orm import Session
+from fastapi import Depends, HTTPException, status
+from jose import JWTError, jwt
 from passlib.context import CryptContext
+from sqlalchemy.orm import Session
+
 from . import models, schemas
+from .schemas import UserSchemas, TokenSchemas, TokenDataSchemas
+from .models import User
+from .auth.service_auth import SECRET_KEY, ALGORITHM, hash_password, oauth2_scheme
+from .database import get_db
 
 
+def create_user(db: Session, user: UserSchemas):
+    hashed_passwd = hash_password(user.password)
+    new_user = User(
+        email=user.email,
+        name=user.name,
+        password=hashed_passwd,
+        role_id=user.role_id or 1,
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
 
-def get_user(db: Session, user_id: int):
-    """
-    从数据库中, 根据user_id, 获取唯一用户
-    """
+
+def get_user_by_id(db: Session, user_id: int):
     return db.query(models.User).filter(models.User.id == user_id).first()
 
 
 def get_user_by_name(db: Session, username: str):
-    """
-    从数据库中, 根据name, 获取唯一用户
-    """
     return db.query(models.User).filter(models.User.name == username).first()
 
 
 def get_user_by_email(db: Session, user_email: str):
-    """
-    从数据库中, 根据user_email, 获取唯一用户
-    """
     return db.query(models.User).filter(models.User.email == user_email).first()
 
 
+def get_user_by_account(db: Session, username: str, password: str):
+    return (
+        db.query(models.User)
+        .filter(
+            models.User.email == username
+            and models.User.password == hash_password(password)
+        )
+        .first()
+    )
+
+
 def get_users(db: Session, offset: int | None, limit: int | None):
-    """
-    从数据库中获取所有用户
-    offset: 查询偏移, 每隔offset输出一次
-    limit:  最大获取用户数量
-    """
     return db.query(models.User).offset(offset=offset).limit(limit=limit).all()
 
 
-def get_history_all(db: Session, limit: int | None):
+def get_current_user(
+    token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
+):
     """
-    从数据库中获取所有历史记录
-    limit: 最大获取历史记录数量
+    对token解码, 通过token解析出用户信息(用户信息在数据库中查找)
     """
-    return db.query(models.History).limit(limit=limit).all()
-
-
-
-
-def create_history(db: Session, history: schemas.History, user_id: int):
-    """
-    创建历史记录, 将历史记录绑定到对应用户id上
-    content:  具体的历史记录内容
-    owner_id: 用户id
-    """
-    new_history = models.History(content=history.content, owner_id=user_id)
-    db.add(new_history)
-    db.commit()
-    db.refresh(new_history)
-    return new_history
+    credential_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="User validation error(JWT error)",
+        headers={"WWW-Authenticate": "bearer"},
+    )
+    try:
+        payload: dict = jwt.decode(token=token, key=SECRET_KEY, algorithms=[ALGORITHM])
+        username = payload.get("sub")
+        token_data = schemas.TokenDataSchemas(username=username)
+        if not username:
+            raise credential_exception
+    except JWTError:
+        raise credential_exception
+    # 根据解析出的usrname, 从数据库查找用户信息
+    user = get_user_by_name(db=db, username=token_data.username)
+    if not user:
+        raise credential_exception
+    return user

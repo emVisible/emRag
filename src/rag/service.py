@@ -1,14 +1,19 @@
+from fastapi import File, UploadFile, HTTPException
 from langchain_chroma import Chroma
 from langchain_community.embeddings import XinferenceEmbeddings
-from os import getenv
+import shutil
+from os import getenv, path, remove
 
 from ..utils import log
 from .config import RAGConfig
+from .document_loader import load_document
 
 # 加载配置
 db_addr = getenv("DB_ADDR")
 query_quantity = RAGConfig.QUERY_QUANTITY
-xinference_embedding_model_id = getenv("XINFERENCE_EMBEDDING_MODEL_ID") or "bge-large-zh-v1.5"
+xinference_embedding_model_id = (
+    getenv("XINFERENCE_EMBEDDING_MODEL_ID") or "bge-large-zh-v1.5"
+)
 xinference_addr = getenv("XINFERENCE_ADDR") or "http://127.0.0.1:9997"
 print(xinference_embedding_model_id)
 print(xinference_addr)
@@ -49,3 +54,20 @@ def gc() -> None:
     vector_db = Chroma(persist_directory=db_addr)
     vector_db.delete_collection()
     print("[System] GC回收完毕")
+
+
+# 上传单个文件, 并处理为向量
+@log("文档向量化处理中")
+async def upload_file(file: UploadFile = File(...)):
+    tmp_save_path = path.abspath(f"../../tmp/{file.filename}")
+    print(tmp_save_path)
+    with open(tmp_save_path) as tmp_f:
+        shutil.copyfileobj(file.file, tmp_f)
+    try:
+        documents = load_document(tmp_save_path)
+        return {"message": "文件处理成功", "documents": documents}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        tmp_f.close()
+        remove(tmp_save_path)

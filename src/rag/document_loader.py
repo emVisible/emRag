@@ -88,7 +88,7 @@ LOADER_MAPPING = {
 
 
 # 加载单个文档
-def load_single_document(file_path: str) -> List[Document]:
+def load_document(file_path: str) -> List[Document]:
     ext = "." + file_path.rsplit(".", 1)[-1]
     if ext in LOADER_MAPPING:
         loader_class, loader_args = LOADER_MAPPING[ext]
@@ -113,7 +113,7 @@ def load_documents(source_dir: str, ignored_files: List[str] = []) -> List[Docum
             total=len(filtered_files), desc="文档加载中", ncols=80
         ) as pbar:
             for i, docs in enumerate(
-                pool.imap_unordered(load_single_document, filtered_files)
+                pool.imap_unordered(load_document, filtered_files)
             ):
                 results.extend(docs)
                 pbar.update()
@@ -121,7 +121,7 @@ def load_documents(source_dir: str, ignored_files: List[str] = []) -> List[Docum
     return results
 
 
-@log("矢量库创建中")
+# 批量加载指定目录文档
 def process_documents(ignored_files: List[str] = []) -> List[Document]:
     print(f"文档加载中: 源自 {source_directory}")
     documents = load_documents(source_directory, ignored_files)

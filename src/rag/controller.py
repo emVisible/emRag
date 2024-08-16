@@ -1,12 +1,12 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, status, File, UploadFile
 
 from src.llm.controller import chat
 
 from ..llm.dto.chat import ChatDto
-from ..utils import Tag
+from ..utils import Tags
 from . import service
 from .dto.completion import CompletionDto
-from .generateDB import run
+from .document_loader import run, load_documents, load_document
 
 route_rag = APIRouter(prefix="/rag")
 
@@ -23,7 +23,7 @@ route_rag = APIRouter(prefix="/rag")
     summary="[RAG] 对话",
     response_description="返回最终结果",
     status_code=status.HTTP_200_OK,
-    tags=[Tag.rag],
+    tags=[Tags.rag],
 )
 async def search(body: CompletionDto):
     prompt = body.prompt
@@ -35,11 +35,21 @@ async def search(body: CompletionDto):
 
 
 @route_rag.post(
+    "/upload_single",
+    summary="[RAG] 根据单一文档转换为矢量",
+    response_description="返回是否成功",
+    status_code=status.HTTP_200_OK,
+    tags=[Tags.rag],
+)
+async def upload_single(file: UploadFile = File(...)):
+  return service.upload_file(file)
+
+@route_rag.post(
     "/generate",
     summary="[RAG] 批量创建矢量库",
     response_description="返回是否成功",
     status_code=status.HTTP_200_OK,
-    tags=[Tag.rag],
+    tags=[Tags.rag],
 )
 async def generate():
     run()
@@ -50,7 +60,7 @@ async def generate():
     summary="[RAG] 清空数据库",
     response_description="返回是否成功",
     status_code=status.HTTP_200_OK,
-    tags=[Tag.rag],
+    tags=[Tags.rag],
 )
 async def gc():
     status = service.gc()

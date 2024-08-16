@@ -1,4 +1,4 @@
-from json import dumps
+from json import dumps, loads
 from os import getenv
 
 from fastapi import APIRouter, status
@@ -6,7 +6,7 @@ from fastapi.responses import StreamingResponse
 from starlette.responses import StreamingResponse
 from xinference.client import RESTfulClient
 
-from ..utils import Tag
+from ..utils import Tags
 from .dto.chat import ChatDto
 
 xinference_addr = getenv("XINFERENCE_ADDR")
@@ -19,7 +19,7 @@ route_llm = APIRouter(prefix="/llm")
     summary="[LLM] 通过xinference与模型对话",
     response_description="返回对话结果",
     status_code=status.HTTP_200_OK,
-    tags=[Tag.llm],
+    tags=[Tags.llm],
 )
 async def chat(body: ChatDto):
     prompt = body.prompt
@@ -34,12 +34,16 @@ async def chat(body: ChatDto):
         system_prompt=system_prompt
         or """你是浙江外国语学院(浙外)问答助手, 根据用户提供的上下文信息, 负责准确回答师生的提问, 对于有已知信息需要筛选的, 给出原数据结果""",
         chat_history=chat_history,
-        generate_config={"stream": True},
+        generate_config={
+            "stream": True,
+            "max_tokens": 1024,
+        },
     )
 
     def streaming_response_iterator():
         for chunk in res:
-            yield dumps(chunk) + "\n"
+            cache = dumps(chunk) + "\n"
+            yield cache
 
     return StreamingResponse(
         content=streaming_response_iterator(),
