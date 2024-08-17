@@ -1,6 +1,10 @@
-from fastapi import APIRouter, status, File, UploadFile
+from fastapi import APIRouter, status, File, UploadFile, HTTPException
+import shutil
+from os import getenv, remove, mkdir
+from pathlib import Path
 
-from src.llm.controller import chat
+
+from src.llm.controller import chat, chat_none_stream
 
 from ..llm.dto.chat import ChatDto
 from ..utils import Tags
@@ -30,7 +34,7 @@ async def search(body: CompletionDto):
     context = await service.similarity_search(question=prompt)
     prompt = await service.create_prompt(question=prompt, context=context)
     print(prompt)
-    result = await chat(body=ChatDto(prompt=prompt))
+    result = await chat_none_stream(body=ChatDto(prompt=prompt))
     return {"data": result, "code": status.HTTP_200_OK, "msg": "暂无"}
 
 
@@ -42,7 +46,25 @@ async def search(body: CompletionDto):
     tags=[Tags.rag],
 )
 async def upload_single(file: UploadFile = File(...)):
-  return service.upload_file(file)
+    tmp_dir = getenv('TEMP_FILE_ADDR')
+    Path(f"{tmp_dir}").mkdir(parents=True, exist_ok=True)
+    tmp_save_path_obj = Path(f"{tmp_dir}/{file.filename}")
+    tmp_save_path = str(tmp_save_path_obj)
+    print("======================================")
+    print(tmp_save_path)
+    print(type(tmp_save_path))
+    print("======================================")
+    try:
+        with open(tmp_save_path, "wb") as tmp_f:
+            shutil.copyfileobj(file.file, tmp_f)
+        documents = load_document(tmp_save_path)
+        return {"message": "文件处理成功", "documents": documents}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    # finally:
+    #     if tmp_save_path_obj.exists():
+    #         remove(tmp_save_path)
+
 
 @route_rag.post(
     "/generate",

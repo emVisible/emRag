@@ -5,4 +5,4 @@ from dotenv import load_dotenv
 class RAGConfig:
     CHUNK_SIZE = 512
     CHUNK_OVERLAP = 50
-    QUERY_QUANTITY = 10
+    QUERY_QUANTITY = 5

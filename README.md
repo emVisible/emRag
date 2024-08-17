@@ -1,18 +1,26 @@
-基于LangChain + ChatGLM3构建本地知识库
+基于LangChain + Xinference构建的本地知识库项目
 
 ## 概述
 项目旨在搭建一个基于LLM的检索增强生成的知识库QA系统
 业务人员导入文档作为检索数据源, 模型提供基础能力, 以此来高效地解决实际生活中的问答情景
 
+显存占用:
+以当前默认模型, 显存占用约20G, Nvidia 3090(24G)可在全启动情况下以开发模式正常运行:
+- LLM:       Qwen2-instruct(7b), 显存占用15G
+- Embedding: bge-large-zh-v1.5, 显存占用1.6G
+- Rerank:    bge-reranker-v2-m3, 显存占用2.7G
+
+计划未来版本更新:
+- Milvus向量数据库
+
 ## 技术栈
 LLM:
 - LangChain
-- Qwen2-instruct(暂定)
-后端功能:
+- Xinference
+
+Python Web:
 - FastApi
 - pydantic
-文档:
-- swagger (通过外网CDN加载)
 
 ## 项目目录
 ```

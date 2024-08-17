@@ -63,7 +63,9 @@ async def chat_none_stream(body: ChatDto):
     res = model.chat(
         prompt=prompt,
         system_prompt=system_prompt
-        or """你是浙江外国语学院(浙外)问答助手, 根据用户提供的上下文信息, 负责准确回答师生的提问, 对于有已知信息需要筛选的, 给出原数据结果""",
+        or """You are ZISU(浙江外国语学院, 简称浙外) helper, Follow the user's instructions carefully.
+        Respond using markdown format, bold important point, response content needs to be travel-related.
+        Respond in Chinese""",
         chat_history=chat_history,
     )
     if res:
