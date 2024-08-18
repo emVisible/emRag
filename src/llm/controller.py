@@ -8,9 +8,8 @@ from xinference.client import RESTfulClient
 
 from ..utils import Tags
 from .dto.chat import ChatDto
+from ..config import xinference_addr, xinference_llm_model_id
 
-xinference_addr = getenv("XINFERENCE_ADDR")
-xinference_llm_model_id = getenv("XINFERENCE_LLM_MODEL_ID")
 route_llm = APIRouter(prefix="/llm")
 
 

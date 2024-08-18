@@ -96,3 +96,8 @@ windows下启动
   启动
   > xinference-local --host 127.0.0.1 --port 9997
 ```
+
+tip: 清除python进程
+```
+  > ps -ef | grep python | grep -v grep | awk '{print $2}' | xargs kill -9
+```

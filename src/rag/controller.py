@@ -1,25 +1,25 @@
-from fastapi import APIRouter, status, File, UploadFile, HTTPException
-from pathlib import Path
+from json import dumps
+from fastapi import APIRouter, File, HTTPException, UploadFile, status
+from fastapi.responses import StreamingResponse
+from xinference.client import RESTfulClient
 
-
-from src.llm.controller import chat, chat_none_stream
-
+from ..config import (
+    xinference_addr,
+    xinference_llm_model_id,
+)
 from ..llm.dto.chat import ChatDto
 from ..utils import Tags
 from . import service
-from .dto.completion import CompletionDto
-from .document_loader import (
-    embedding_all_from_dir,
-    embedding_document,
-)
+from .document_loader import embedding_all_from_dir, embedding_document
 
 route_rag = APIRouter(prefix="/rag")
 
 
 """
-  1. 调用Langchain, 检索文档
-  2. 合成Prompt
-  3. 调用LLM, 返回结果
+  1. 调用LangChain, 检索文档
+  2. 调用Rerank Model, 对结果排序
+  3. 合成提问Prompt
+  4. 调用LLM, 返回结果
 """
 
 
@@ -30,12 +30,37 @@ route_rag = APIRouter(prefix="/rag")
     status_code=status.HTTP_200_OK,
     tags=[Tags.rag],
 )
-async def search(body: CompletionDto):
+async def search(body: ChatDto):
     prompt = body.prompt
+    system_prompt = body.system_prompt
+    chat_history = body.chat_history
+
     context = await service.similarity_search(question=prompt)
     prompt = await service.create_prompt(question=prompt, context=context)
-    result = await chat_none_stream(body=ChatDto(prompt=prompt))
-    return {"data": result, "code": status.HTTP_200_OK, "msg": "暂无"}
+    # 通过XINFERENCE Client联通, 对LLM模型发送chat API
+    client = RESTfulClient(base_url=xinference_addr or "http://127.0.0.1:9997")
+    model = client.get_model(model_uid=xinference_llm_model_id or "qwen2-instruct")
+    res = model.chat(
+        prompt=prompt,
+        system_prompt=system_prompt
+        or """你是浙江外国语学院(浙外)问答助手, 根据用户提供的上下文信息, 负责准确回答师生的提问, 对于有已知信息需要筛选的, 给出原数据结果""",
+        chat_history=chat_history,
+        generate_config={
+            "stream": True,
+            "max_tokens": 1024,
+        },
+    )
+
+    def streaming_response_iterator():
+        for chunk in res:
+            cache = dumps(chunk) + "\n"
+            yield cache
+
+    return StreamingResponse(
+        content=streaming_response_iterator(),
+        media_type="application/json",
+        status_code=200,
+    )
 
 
 @route_rag.post(

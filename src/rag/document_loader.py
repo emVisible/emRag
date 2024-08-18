@@ -2,6 +2,7 @@
 import glob
 import os
 import shutil
+
 # import torch
 from multiprocessing import Pool
 from pathlib import Path
@@ -12,29 +13,30 @@ from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
 from langchain_community.document_loaders import (
-    CSVLoader, EverNoteLoader, PDFMinerLoader, TextLoader,
-    UnstructuredEmailLoader, UnstructuredEPubLoader, UnstructuredExcelLoader,
-    UnstructuredHTMLLoader, UnstructuredMarkdownLoader, UnstructuredODTLoader,
-    UnstructuredPowerPointLoader, UnstructuredWordDocumentLoader)
+    CSVLoader,
+    EverNoteLoader,
+    PDFMinerLoader,
+    TextLoader,
+    UnstructuredEmailLoader,
+    UnstructuredEPubLoader,
+    UnstructuredExcelLoader,
+    UnstructuredHTMLLoader,
+    UnstructuredMarkdownLoader,
+    UnstructuredODTLoader,
+    UnstructuredPowerPointLoader,
+    UnstructuredWordDocumentLoader,
+)
 from langchain_community.embeddings import XinferenceEmbeddings
 from tqdm import tqdm
 
-from .config import RAGConfig
-
-# 加载配置
-
-query_quantity = RAGConfig.QUERY_QUANTITY
-chunk_size = RAGConfig.CHUNK_SIZE
-chunk_overlap = RAGConfig.CHUNK_OVERLAP
-
-source_directory = os.getenv("DOC_ADDR")
-db_dir = os.getenv("DB_ADDR")
-
-xinference_embedding_model_id = (
-    os.getenv("XINFERENCE_EMBEDDING_MODEL_ID") or "bge-large-zh-v1.5"
+from ..config import (
+    chunk_overlap,
+    chunk_size,
+    db_addr,
+    doc_addr,
+    xinference_embedding_model_id,
+    xinference_addr,
 )
-xinference_addr = os.getenv("XINFERENCE_ADDR") or "http://127.0.0.1:9997"
-k = RAGConfig.QUERY_QUANTITY
 
 
 # 自定义文档加载器 document loader
@@ -115,8 +117,8 @@ def load_documents(source_dir: str, ignored_files: List[str] = []) -> List[Docum
 
 # 批量加载指定目录文档
 def process_documents(ignored_files: List[str] = []) -> List[Document]:
-    print(f"文档加载中: 源自 {source_directory}")
-    documents = load_documents(source_directory, ignored_files)
+    print(f"文档加载中: 源自 {doc_addr}")
+    documents = load_documents(doc_addr, ignored_files)
     if not documents:
         print("没有可加载的文档")
         exit(0)
@@ -143,7 +145,7 @@ def embedding_document(file: UploadFile = File(...)):
         Chroma.from_documents(
             documents=documents,
             embedding=embedding_function,
-            persist_directory=db_dir,
+            persist_directory=db_addr,
         )
         return True
     except ValueError as e:
@@ -158,4 +160,4 @@ def embedding_all_from_dir():
     embedding_function = XinferenceEmbeddings(
         server_url=xinference_addr, model_uid=xinference_embedding_model_id
     )
-    Chroma.from_documents(texts, embedding_function, persist_directory=db_dir)
+    Chroma.from_documents(texts, embedding_function, persist_directory=db_addr)

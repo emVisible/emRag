@@ -30,23 +30,33 @@ def log_msg():
     env_path = join(abspath("./"), ".env")
     load_dotenv(dotenv_path=env_path)
     max_length = 200
-    print(f"[PATH-ROOT] root path: {env_path}".ljust(max_length))
-    print(f"[PATH-DOC] doc path: {getenv('DOC_ADDR')}".ljust(max_length))
-    print(f"[PATH-DB] db path: {getenv('DB_ADDR')}".ljust(max_length))
+    print(f"[AUTH-ALGORITHM] {getenv('ALGORITHM')}".ljust(max_length))
+    print(f"[AUTH-SECRET KEY] {getenv('SECRET_KEY')}".ljust(max_length))
+    print(f"[AUTH-ACCESS TOKEN EXPIRE TIME] {getenv('ACCESS_TOKEN_EXPIRE_MINUTES')}".ljust(max_length))
 
-    print(f"[RAG-CONFIG] xinference url: {getenv('XINFERENCE_ADDR')}".ljust(max_length))
+    print(f"[PATH-ROOT] {env_path}".ljust(max_length))
+    print(f"[PATH-DB] {getenv('DB_ADDR')}".ljust(max_length))
+    print(f"[PATH-DOC] {getenv('DOC_ADDR')}".ljust(max_length))
+    print(f"[PATH-OUTPUT] {getenv('OUTPUT_ADDR')}".ljust(max_length))
+    print(f"[PATH-TEMP] {getenv('TEMP_FILE_ADDR')}".ljust(max_length))
+
+    print(f"[RAG-PARAM] k: {getenv('K')}".ljust(max_length))
+    print(f"[RAG-PARAM] chunk_size: {getenv('CHUNK_SIZE')}".ljust(max_length))
+    print(f"[RAG-PARAM] chunk_overlap: {getenv('CHUNK_OVERLAP')}".ljust(max_length))
+
+    print(f"[XINFERENCE] xinference url: {getenv('XINFERENCE_ADDR')}".ljust(max_length))
     print(
-        f"[RAG-CONFIG] xinference llm model id: {getenv('XINFERENCE_LLM_MODEL_ID')}".ljust(
+        f"[XINFERENCE] xinference llm model id: {getenv('XINFERENCE_LLM_MODEL_ID')}".ljust(
             max_length
         )
     )
     print(
-        f"[RAG-CONFIG] xinference embedding model id: {getenv('XINFERENCE_EMBEDDING_MODEL_ID')}".ljust(
+        f"[XINFERENCE] xinference embedding model id: {getenv('XINFERENCE_EMBEDDING_MODEL_ID')}".ljust(
             max_length
         )
     )
     print(
-        f"[RAG-CONFIG] xinference rerank model id: {getenv('XINFERENCE_RERANK_MODEL_ID')}".ljust(
+        f"[XINFERENCE] xinference rerank model id: {getenv('XINFERENCE_RERANK_MODEL_ID')}".ljust(
             max_length
         )
     )
