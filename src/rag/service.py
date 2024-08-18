@@ -42,7 +42,7 @@ async def similarity_search(question: str) -> str:
     )
     shuffled_res = sorted(
         res["results"], key=lambda x: x["relevance_score"], reverse=True
-    )
+    )[:3]
     return shuffled_res
 
 

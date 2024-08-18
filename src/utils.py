@@ -1,7 +1,18 @@
 from enum import Enum
 from os import getenv
-from os.path import join, abspath
+from os.path import abspath, join
+from typing import Any, Optional, Union
+
 from dotenv import load_dotenv
+from fastapi import status
+from pydantic import BaseModel
+
+
+# TODO: 路由使用response_model作为统一相应模型
+class ResponseModel(BaseModel):
+    data: Optional[Union[str, Any]] = None
+    code: int = status.HTTP_200_OK
+    msg: str = "ok"
 
 
 def log(text: str):

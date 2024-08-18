@@ -1,31 +1,24 @@
 # coding: utf-8
-import os
 import glob
-from typing import List
-from src.utils import log
-
+import os
+import shutil
 # import torch
 from multiprocessing import Pool
-from tqdm import tqdm
-from langchain_community.document_loaders import (
-    CSVLoader,
-    EverNoteLoader,
-    PDFMinerLoader,
-    TextLoader,
-    UnstructuredEmailLoader,
-    UnstructuredEPubLoader,
-    UnstructuredHTMLLoader,
-    UnstructuredMarkdownLoader,
-    UnstructuredODTLoader,
-    UnstructuredPowerPointLoader,
-    UnstructuredWordDocumentLoader,
-    UnstructuredExcelLoader,
-)
+from pathlib import Path
+from typing import List
 
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.embeddings import XinferenceEmbeddings
-from langchain_chroma import Chroma
+from fastapi import File, HTTPException, UploadFile
 from langchain.docstore.document import Document
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_chroma import Chroma
+from langchain_community.document_loaders import (
+    CSVLoader, EverNoteLoader, PDFMinerLoader, TextLoader,
+    UnstructuredEmailLoader, UnstructuredEPubLoader, UnstructuredExcelLoader,
+    UnstructuredHTMLLoader, UnstructuredMarkdownLoader, UnstructuredODTLoader,
+    UnstructuredPowerPointLoader, UnstructuredWordDocumentLoader)
+from langchain_community.embeddings import XinferenceEmbeddings
+from tqdm import tqdm
+
 from .config import RAGConfig
 
 # 加载配置
@@ -96,6 +89,7 @@ def load_document(file_path: str) -> List[Document]:
         return loader.load()
     raise ValueError(f"不支持的格式 .'{ext}'")
 
+
 # 加载多个文档
 def load_documents(source_dir: str, ignored_files: List[str] = []) -> List[Document]:
     all_files = []
@@ -109,9 +103,7 @@ def load_documents(source_dir: str, ignored_files: List[str] = []) -> List[Docum
 
     with Pool(processes=os.cpu_count()) as pool:
         results = []
-        with tqdm(
-            total=len(filtered_files), desc="文档加载中", ncols=80
-        ) as pbar:
+        with tqdm(total=len(filtered_files), desc="文档加载中", ncols=80) as pbar:
             for i, docs in enumerate(
                 pool.imap_unordered(load_document, filtered_files)
             ):
@@ -136,8 +128,32 @@ def process_documents(ignored_files: List[str] = []) -> List[Document]:
     return texts
 
 
+def embedding_document(file: UploadFile = File(...)):
+    tmp_dir = os.getenv("TEMP_FILE_ADDR")
+    Path(f"{tmp_dir}").mkdir(parents=True, exist_ok=True)
+    tmp_save_path_obj = Path(f"{tmp_dir}/{file.filename}")
+    tmp_save_path = str(tmp_save_path_obj)
+    try:
+        with open(tmp_save_path, "wb") as tmp_f:
+            shutil.copyfileobj(file.file, tmp_f)
+        documents = load_document(tmp_save_path)
+        embedding_function = XinferenceEmbeddings(
+            server_url=xinference_addr, model_uid=xinference_embedding_model_id
+        )
+        Chroma.from_documents(
+            documents=documents,
+            embedding=embedding_function,
+            persist_directory=db_dir,
+        )
+        return True
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        if tmp_save_path_obj.exists():
+            os.remove(tmp_save_path)
 
-def run():
+
+def embedding_all_from_dir():
     texts = process_documents()
     embedding_function = XinferenceEmbeddings(
         server_url=xinference_addr, model_uid=xinference_embedding_model_id
