@@ -58,6 +58,7 @@ Python Web:
   # 安装项目所需依赖
   > pip install -r requirements.txt
 ```
+遇到llama_cpp或者chaglm_cpp的whl问题, 需要前往chatglm_cpp和llama_cpp_python这两个github repo中手动下载对应版本, 并通过pip安装
 
 模型安装(基于XINFERENCE)
 按最低配置, 较低档次的16G内存的核显轻薄本完全可以流畅运行, 内存占用大概会到90%, 运行时关掉其它内存占用较大的应用
