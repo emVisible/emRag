@@ -6,7 +6,8 @@ from sqlalchemy.orm import Session
 from . import models, schemas
 from .schemas import UserSchemas, TokenSchemas, TokenDataSchemas
 from .models import User
-from .auth.service_auth import SECRET_KEY, ALGORITHM, hash_password, oauth2_scheme
+from .auth.service_auth import  hash_password, oauth2_scheme
+from src.config import secret_key, algorithm
 from .database import get_db
 
 
@@ -63,7 +64,7 @@ def get_current_user(
         headers={"WWW-Authenticate": "bearer"},
     )
     try:
-        payload: dict = jwt.decode(token=token, key=SECRET_KEY, algorithms=[ALGORITHM])
+        payload: dict = jwt.decode(token=token, key=secret_key, algorithms=[algorithm])
         username = payload.get("sub")
         token_data = schemas.TokenDataSchemas(username=username)
         if not username:

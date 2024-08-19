@@ -34,3 +34,4 @@ chromadb
 unstructured
 python-docx
 xinference[all]
+openai==1.39.0

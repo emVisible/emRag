@@ -150,9 +150,9 @@ def embedding_document(file: UploadFile = File(...)):
         return True
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    finally:
-        if tmp_save_path_obj.exists():
-            os.remove(tmp_save_path)
+    # finally:
+    #     if tmp_save_path_obj.exists():
+    #         os.remove(tmp_save_path)
 
 
 def embedding_all_from_dir():

@@ -1,10 +1,12 @@
 from os import getenv
+from dotenv import load_dotenv
+load_dotenv()
 
 algorithm = getenv("ALGORITHM")
-secret_key = getenv("SECRET_KEY")
+secret_key = str(getenv("SECRET_KEY"))
 access_token_expire_minutes = getenv("ACCESS_TOKEN_EXPIRE_MINUTES")
 
-k = getenv("K") or 5
+k = int(getenv("K")) or 5
 chunk_size = getenv("CHUNK_SIZE") or 512
 chunk_overlap = getenv("CHUNK_OVERLAP") or 50
 
