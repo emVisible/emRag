@@ -68,4 +68,5 @@ class Tags(Enum):
     llm = "LLM"
     user = "User"
     auth = "Auth"
+    vector_db = "Vector Database"
     dev = "[DEV] 仅限开发"

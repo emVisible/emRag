@@ -11,12 +11,14 @@
 - Rerank:    bge-reranker-v2-m3, 显存占用2.7G
 
 目前配置 3090x2, rerank模型有较好效果:
-- LLM:       qwen2-instruct(7b)   (15G)
+- LLM:       qwen2-instruct(7b)   (15G, 分配到两张卡上)
 - Embedding: bge-large-zh-v1.5    (1.5G)
-- Rerank:    bge-reranker-v2-gemma(11G)
+- Rerank:    bge-reranker-v2-gemma(10-11G)
+
+实测7b的显存占用, 提问时的显存峰值接近24G, 单放到一张3090里可能会不稳定
 
 计划未来版本更新:
-- Redis数据库 || Chroma数据库
+- Chroma向量数据库 || Redis向量数据库
 
 ## 技术栈
 LLM:

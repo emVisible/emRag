@@ -1,2 +1,7 @@
-def add_to_vector_store():
-  pass
+
+
+async def create_collection(name: str):
+    print("======================================")
+    print(name)
+    print(type(name))
+    print("======================================")

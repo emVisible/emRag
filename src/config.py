@@ -1,5 +1,6 @@
 from os import getenv
 from dotenv import load_dotenv
+
 load_dotenv()
 
 algorithm = getenv("ALGORITHM")
@@ -24,3 +25,5 @@ xinference_rerank_model_id = (
 xinference_embedding_model_id = (
     getenv("XINFERENCE_EMBEDDING_MODEL_ID") or "bge-large-zh-v1.5"
 )
+
+chroma_addr = getenv("CHROMA_ADDR") or "http://127.0.0.1:8080"
