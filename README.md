@@ -22,6 +22,7 @@
 LLM:
 - LangChain
 - Xinference
+- Chroma
 
 Python Web:
 - FastApi
@@ -106,4 +107,9 @@ windows下启动
 tip: 清除python进程
 ```
   > ps -ef | grep python | grep -v grep | awk '{print $2}' | xargs kill -9
+```
+
+启动Chroma
+```
+  > chroma run --path ./db_vector --port 8080
 ```

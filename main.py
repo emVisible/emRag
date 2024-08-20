@@ -12,6 +12,7 @@ from src.base.middleware import CORSMiddleware, origins
 from src.base.models import Base
 from src.llm.controller import route_llm
 from src.rag.controller import route_rag
+from src.vector_store.controller import route_vector
 from src.utils import log_msg
 
 
@@ -44,6 +45,7 @@ route_prefix = "/api"
 app.include_router(route_base, prefix=route_prefix)
 app.include_router(route_rag, prefix=route_prefix)
 app.include_router(route_llm, prefix=route_prefix)
+app.include_router(route_vector, prefix=route_prefix)
 # 跨域中间件
 app.add_middleware(CORSMiddleware, allow_origins=origins)
 
