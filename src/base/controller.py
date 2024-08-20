@@ -2,7 +2,7 @@ from datetime import timedelta
 from enum import Enum
 
 from dotenv import dotenv_values
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
@@ -11,8 +11,14 @@ from .auth.service_auth import authenticate_user, create_access_token
 from .database import get_db
 from .schemas import UserSchemas
 from .service_init import db_init
-from .service_user import (create_user, get_current_user, get_user_by_account,
-                           get_user_by_email, get_user_by_id, get_users)
+from .service_user import (
+    create_user,
+    get_current_user,
+    get_user_by_account,
+    get_user_by_email,
+    get_user_by_id,
+    get_users,
+)
 
 route_base = APIRouter(prefix="/base")
 

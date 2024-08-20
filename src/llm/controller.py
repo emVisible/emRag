@@ -1,7 +1,7 @@
 from json import dumps, loads
 from os import getenv
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, status, WebSocket
 from fastapi.responses import StreamingResponse
 from starlette.responses import StreamingResponse
 from xinference.client import RESTfulClient
@@ -41,12 +41,13 @@ async def chat(body: ChatDto):
 
     def streaming_response_iterator():
         for chunk in res:
-            cache = dumps(chunk) + "\n"
-            yield cache
+            cache = dumps(chunk["choices"][0]["delta"]["content"]) + "\n"
+            if cache:
+                yield cache
 
     return StreamingResponse(
         content=streaming_response_iterator(),
-        media_type="application/json",
+        media_type="text/event-stream",
         status_code=200,
     )
 

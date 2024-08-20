@@ -1,12 +1,10 @@
 from json import dumps
+
 from fastapi import APIRouter, File, HTTPException, UploadFile, status
 from fastapi.responses import StreamingResponse
 from xinference.client import RESTfulClient
 
-from ..config import (
-    xinference_addr,
-    xinference_llm_model_id,
-)
+from ..config import xinference_addr, xinference_llm_model_id
 from ..llm.dto.chat import ChatDto
 from ..utils import Tags
 from . import service
@@ -53,12 +51,13 @@ async def search(body: ChatDto):
 
     def streaming_response_iterator():
         for chunk in res:
-            cache = dumps(chunk) + "\n"
+            cache = dumps(chunk["choices"][0]["delta"]["content"]) + "\n"
+            print(cache)
             yield cache
 
     return StreamingResponse(
         content=streaming_response_iterator(),
-        media_type="application/json",
+        media_type="text/event-stream",
         status_code=200,
     )
 
