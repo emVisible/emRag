@@ -5,15 +5,10 @@
 业务人员导入文档作为检索数据源, 模型提供基础能力, 以此来高效地解决实际生活中的问答情景
 
 显存占用:
-单3090可用配置, 显存占用约20G, Nvidia 3090(24G)可在全启动情况下以开发模式正常运行:
-- LLM:       qwen2-instruct(7b), 显存占用15G
-- Embedding: bge-large-zh-v1.5, 显存占用1.6G
-- Rerank:    bge-reranker-v2-m3, 显存占用2.7G
-
-目前配置 3090x2, rerank模型有较好效果:
-- LLM:       qwen2-instruct(7b)   (15G, 分配到两张卡上)
-- Embedding: bge-large-zh-v1.5    (1.5G)
-- Rerank:    bge-reranker-v2-gemma(10-11G)
+以vLLM为Engine, 目前配置 3090x2:
+- LLM:       qwen2-instruct(7b)   (21G)  卡0
+- Embedding: bge-large-zh-v1.5    (1.5G) 卡1
+- Rerank:    bge-reranker-v2-gemma(11G)  卡1
 
 实测7b的显存占用, 提问时的显存峰值接近24G, 单放到一张3090里可能会不稳定
 
@@ -66,14 +61,13 @@ Python Web:
   # 安装项目所需依赖
   > pip install -r requirements.txt
 ```
-遇到llama_cpp或者chaglm_cpp的whl问题, 需要前往chatglm_cpp和llama_cpp_python这两个github repo中手动下载对应版本, 并通过pip安装
 
 模型安装(基于XINFERENCE)
 按最低配置, 较低档次的16G内存的核显轻薄本完全可以流畅运行, 内存占用大概会到90%, 运行时关掉其它内存占用较大的应用
 低配置的LLM问答输出会较慢, 这是正常的
 打开本地9997端口, 下载两个模型:
    - LLM模型: Qwen2-instruct
-     - Model Engine: transformers
+     - Model Engine: vLLM
      - Model Format: pytorch
      - Model Size: 根据自己电脑情况选, 越大性能要求越高
      - Quantization: 同上, None性能要求最高
@@ -81,6 +75,7 @@ Python Web:
      - Replica: 1
    - Embedding模型: Bge-large-zh-v1.5
      - 按默认下载, CPU运行的, Device中选择CPU
+   - Rerank模型: Bge-reranker-v2-m3
 
 ## 项目启动
 启动项目
@@ -98,6 +93,7 @@ Linux下启动
 ```
   > XINFERENCE_MODEL_SRC=modelscope xinference-local --host 0.0.0.0 --port 9997
 ```
+选择对应模型
 windows下启动
 ```
   设置环境变量
@@ -115,3 +111,28 @@ tip: 清除python进程
 ```
   > chroma run --path ./db_vector --port 8080
 ```
+
+### 启动问题
+启动xinference时遇到报错:
+1. 升级gcc和g++到11版本
+   - 针对llama_cpp_python成功安装但是xinference启动报错
+2. 手动下载llama_cpp_python
+   - 遇到llama_cpp或者chaglm_cpp的whl问题, 需要前往chatglm_cpp和llama_cpp_python这两个github repo中手动下载对应版本, 并通过pip安装
+
+## 并发测试
+LLM测试
+12线程400链接, 600秒测试, 10分钟内可处理1000个请求, 平均每秒处理1.7个对话请求, 每个回答大约有700左右的字数
+```
+  > wrk -t12 -c400 -d600 -s ./test.lua http://127.0.0.1:3000/api/llm/chat
+
+  Running 10m test @ http://localhost:3000/api/llm/chat
+  12 threads and 400 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     0.00us    0.00us   0.00us    -nan%
+    Req/Sec     0.24      0.96    10.00     95.09%
+  1039 requests in 10.00m, 6.64MB read
+  Socket errors: connect 0, read 0, write 0, timeout 1039
+  Requests/sec:      1.73
+  Transfer/sec:     11.33KB
+```
+RAG测试

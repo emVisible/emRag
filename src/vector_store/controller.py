@@ -42,14 +42,3 @@ async def get_collections(
 )
 async def get_collection_by_name(name: str, client: ClientAPI = Depends(get_client)):
     return client.get_collection(name=name)
-
-
-@route_vector.post(
-    "/collection",
-    summary="[Vector Database] 根据名称返回collection",
-    response_description="返回是否成功",
-    status_code=status.HTTP_200_OK,
-    tags=[Tags.vector_db],
-)
-async def get_collection_by_name(name: str, client: ClientAPI = Depends(get_client)):
-    return client.get_collection(name=name)

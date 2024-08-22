@@ -5,12 +5,18 @@ from fastapi import APIRouter, status, WebSocket
 from fastapi.responses import StreamingResponse
 from starlette.responses import StreamingResponse
 from xinference.client import RESTfulClient
+from asyncio import Lock, sleep, Semaphore
+
 
 from ..utils import Tags
 from .dto.chat import ChatDto
 from ..config import xinference_addr, xinference_llm_model_id
 
 route_llm = APIRouter(prefix="/llm")
+model_lock = Lock()
+client = RESTfulClient(base_url=xinference_addr or "http://127.0.0.1:9997")
+model = client.get_model(model_uid=xinference_llm_model_id or "qwen2-instruct")
+semaphore = Semaphore(5)
 
 
 @route_llm.post(
@@ -26,24 +32,25 @@ async def chat(body: ChatDto):
     chat_history = body.chat_history
 
     # 通过XINFERENCE Client联通, 对LLM模型发送chat API
-    client = RESTfulClient(base_url=xinference_addr or "http://127.0.0.1:9997")
-    model = client.get_model(model_uid=xinference_llm_model_id or "qwen2-instruct")
-    res = model.chat(
-        prompt=prompt,
-        system_prompt=system_prompt
-        or """你是浙江外国语学院(浙外)问答助手, 根据用户提供的上下文信息, 负责准确回答师生的提问, 对于有已知信息需要筛选的, 给出原数据结果""",
-        chat_history=chat_history,
-        generate_config={
-            "stream": True,
-            "max_tokens": 1024,
-        },
-    )
+    async with model_lock:
+        res = model.chat(
+            prompt=prompt,
+            system_prompt=system_prompt
+            or """你是浙江外国语学院(浙外)问答助手, 根据用户提供的上下文信息, 负责准确回答师生的提问, 对于有已知信息需要筛选的, 给出原数据结果""",
+            chat_history=chat_history,
+            generate_config={
+                "stream": True,
+                "max_tokens": 1024,
+            },
+        )
 
-    def streaming_response_iterator():
+    async def streaming_response_iterator():
         for chunk in res:
             cache = dumps(chunk["choices"][0]["delta"]["content"]) + "\n"
             if cache:
                 yield cache
+            await sleep(0)  # 确保其他协程有机会运行
+
 
     return StreamingResponse(
         content=streaming_response_iterator(),

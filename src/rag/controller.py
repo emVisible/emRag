@@ -3,6 +3,7 @@ from json import dumps
 from fastapi import APIRouter, File, HTTPException, UploadFile, status
 from fastapi.responses import StreamingResponse
 from xinference.client import RESTfulClient
+from asyncio import Lock, sleep, Semaphore
 
 from ..config import xinference_addr, xinference_llm_model_id
 from ..llm.dto.chat import ChatDto
@@ -11,6 +12,10 @@ from . import service
 from .document_loader import embedding_all_from_dir, embedding_document
 
 route_rag = APIRouter(prefix="/rag")
+model_lock = Lock()
+client = RESTfulClient(base_url=xinference_addr or "http://127.0.0.1:9997")
+model = client.get_model(model_uid=xinference_llm_model_id or "qwen2-instruct")
+semaphore = Semaphore(5)
 
 
 """
@@ -35,25 +40,27 @@ async def search(body: ChatDto):
 
     context = await service.similarity_search(question=prompt)
     prompt = await service.create_prompt(question=prompt, context=context)
-    # 通过XINFERENCE Client联通, 对LLM模型发送chat API
-    client = RESTfulClient(base_url=xinference_addr or "http://127.0.0.1:9997")
-    model = client.get_model(model_uid=xinference_llm_model_id or "qwen2-instruct")
-    res = model.chat(
-        prompt=prompt,
-        system_prompt=system_prompt
-        or """你是浙江外国语学院(浙外)问答助手, 根据用户提供的上下文信息, 负责准确回答师生的提问, 对于有已知信息需要筛选的, 给出原数据结果""",
-        chat_history=chat_history,
-        generate_config={
-            "stream": True,
-            "max_tokens": 1024,
-        },
-    )
 
-    def streaming_response_iterator():
+    async with model_lock:
+        res = model.chat(
+            prompt=prompt,
+            system_prompt=system_prompt
+            or """你是浙江外国语学院(浙外)问答助手, 根据用户提供的上下文信息, 负责准确回答师生的提问, 对于有已知信息需要筛选的, 给出原数据结果""",
+            chat_history=chat_history,
+            generate_config={
+                "stream": True,
+                "max_tokens": 1024,
+            },
+        )
+
+    async def streaming_response_iterator():
         for chunk in res:
             cache = dumps(chunk["choices"][0]["delta"]["content"]) + "\n"
-            print(cache)
-            yield cache
+            if cache:
+                print(cache)
+                yield cache
+            await sleep(0)  # 确保其他协程有机会运行
+
 
     return StreamingResponse(
         content=streaming_response_iterator(),
