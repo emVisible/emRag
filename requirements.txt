@@ -5,7 +5,8 @@ nltk==3.8.1
 protobuf
 transformers>=4.37.2
 cpm_kernels
-torch>=2.0
+torch>=2.3.0
+torchvision>=0.18.0
 gradio>=3.38.0,<4.0.0
 mdtex2html
 sentencepiece
@@ -35,3 +36,6 @@ unstructured
 python-docx
 xinference[all]
 openai==1.39.0
+vllm>=0.5.0
+openpyxl
+pdfminer.six

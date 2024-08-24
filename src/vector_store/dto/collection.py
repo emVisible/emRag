@@ -1,8 +1,5 @@
 from pydantic import BaseModel
 
 
-class CreateCollectionType(BaseModel):
+class GetCollectionType(BaseModel):
     name: str
-    configuration: dict
-    metadata: dict
-    get_or_create: bool

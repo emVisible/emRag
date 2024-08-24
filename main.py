@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 
 import torch
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html
@@ -12,8 +13,8 @@ from src.base.middleware import CORSMiddleware, origins
 from src.base.models import Base
 from src.llm.controller import route_llm
 from src.rag.controller import route_rag
-from src.vector_store.controller import route_vector
 from src.utils import log_msg
+from src.vector_store.controller import route_vector
 
 
 @asynccontextmanager
@@ -34,6 +35,7 @@ def swagger_monkey_patch(*args, **kwargs):
     )
 
 
+load_dotenv("./.env")
 # 打印配置信息
 log_msg()
 # 初始化数据库

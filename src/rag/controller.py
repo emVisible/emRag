@@ -38,8 +38,8 @@ async def search(body: ChatDto):
     system_prompt = body.system_prompt
     chat_history = body.chat_history
 
-    context = await service.similarity_search(question=prompt)
-    prompt = await service.create_prompt(question=prompt, context=context)
+    context = service.similarity_search(question=prompt)
+    prompt = service.create_prompt(question=prompt, context=context)
 
     async with model_lock:
         res = model.chat(

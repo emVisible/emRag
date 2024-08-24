@@ -1,7 +1,4 @@
 from os import getenv
-from dotenv import load_dotenv
-
-load_dotenv()
 
 algorithm = getenv("ALGORITHM")
 secret_key = str(getenv("SECRET_KEY"))
