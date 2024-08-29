@@ -11,6 +11,7 @@ from src.base.controller import route_base
 from src.base.database import engine
 from src.base.middleware import CORSMiddleware, origins
 from src.base.models import Base
+from src.init.controller import route_init
 from src.llm.controller import route_llm
 from src.rag.controller import route_rag
 from src.utils import log_msg
@@ -45,9 +46,10 @@ app = FastAPI(title="ZISU-RAG", version="1.0.0", lifespan=lifespan)
 # 导入路由
 route_prefix = "/api"
 app.include_router(route_base, prefix=route_prefix)
-app.include_router(route_rag, prefix=route_prefix)
-app.include_router(route_llm, prefix=route_prefix)
+app.include_router(route_init, prefix=route_prefix)
 app.include_router(route_vector, prefix=route_prefix)
+app.include_router(route_llm, prefix=route_prefix)
+app.include_router(route_rag, prefix=route_prefix)
 # 跨域中间件
 app.add_middleware(CORSMiddleware, allow_origins=origins)
 

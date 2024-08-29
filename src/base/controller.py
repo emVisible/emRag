@@ -10,7 +10,6 @@ from ..utils import Tags
 from .auth.service_auth import authenticate_user, create_access_token
 from .database import get_db
 from .schemas import UserSchemas
-from .service_init import db_init
 from .service_user import (
     create_user,
     get_current_user,
@@ -114,17 +113,3 @@ async def check_current_user(
     user: UserSchemas = Depends(get_current_user),
 ):
     return user
-
-
-@route_base.post(
-    "/init_table",
-    summary="初始化表 [开发模式使用]",
-    status_code=status.HTTP_200_OK,
-    response_description="返回是否成功",
-    tags=[Tags.dev],
-)
-async def init_table_user(
-    db: Session = Depends(get_db),
-):
-    db_init(db=db)
-    return "初始化成功"

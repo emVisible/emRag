@@ -50,7 +50,7 @@ windows下启动
 启动LLM、Embedding、Rerank模型:
 - LLM: 添加参数max_model_len, RAG搜索时的input token数量
 
-1. 项目
+2. 项目
 ```
   uvicorn main:app --port 3000 --reload
 ```

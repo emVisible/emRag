@@ -3,11 +3,13 @@ from fastapi import APIRouter, HTTPException, status
 from src.utils import Tags
 
 from .dto.collection import GetCollectionType
+from .dto.tenant import CreateOrGetTenantType
 from .service import (
     collection_create,
-    collection_update,
     collection_get_all,
     collection_get_detail,
+    tenant_create,
+    tenant_get,
 )
 
 route_vector = APIRouter(prefix="/vector_store")
@@ -46,3 +48,28 @@ async def get_collection(dto: GetCollectionType):
 async def create_collection():
     collection_create()
     return "OK"
+
+
+@route_vector.post(
+    "/tenant/create",
+    summary="[Vector Database] 创建tenant",
+    response_description="返回是否成功",
+    status_code=status.HTTP_200_OK,
+    tags=[Tags.vector_db],
+)
+async def create_tenant(dto: CreateOrGetTenantType):
+    name = dto.name
+    tenant_create(name=name)
+    return "OK"
+
+
+@route_vector.post(
+    "/tenant/get",
+    summary="[Vector Database] 获取tenant",
+    response_description="返回是否成功",
+    status_code=status.HTTP_200_OK,
+    tags=[Tags.vector_db],
+)
+async def create_collection(dto: CreateOrGetTenantType):
+    name = dto.name
+    return tenant_get(name=name)

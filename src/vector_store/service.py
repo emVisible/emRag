@@ -79,7 +79,8 @@ def tenant_create(name: str):
 
 # 获取tenant
 def tenant_get(name: str):
-    admin_client.get_tenant(name=name)
+    tenant = admin_client.get_tenant(name=name)
+    return tenant
 
 
 # 敏感操作: 重置数据库
