@@ -1,8 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from langchain.embeddings import XinferenceEmbeddings
+from langchain_community.embeddings import XinferenceEmbeddings
 from langchain_chroma import Chroma
-from chromadb import HttpClient, AdminClient, AsyncHttpClient
+import requests
+from chromadb import AsyncHttpClient, HttpClient
+from chromadb.config import Settings
 from langchain_core.documents import Document
+from json import dumps
+from src.config import chroma_addr
 from typing import List
 
 from src.config import (
@@ -15,28 +19,28 @@ embedding_function = XinferenceEmbeddings(
     model_uid=xinference_embedding_model_id, server_url=xinference_addr
 )
 
-admin_client = AdminClient()
-persistent_client = HttpClient(host="127.0.0.1", port=8080)
+http_client = HttpClient(host="127.0.0.1", port=8080)
+base_url = chroma_addr
 
 
 # 创建collection
-def collection_create(collection_name: str, documents: List[Document]):
-    Chroma.from_documents(
-        collection_name=collection_name,
-        documents=documents,
-        embedding=embedding_function,
-        persist_directory=db_addr,
+def collection_create(name: str, tenant_name: str, database_name: str, metadata:dict):
+    res = requests.post(
+        f"{base_url}/collections",
+        params={"tenant": tenant_name, "database": database_name},
+        json={"name": name, "configuration": {}, "metadata": metadata, "get_or_create": "true"},
     )
-
+    if res.status_code == 200:
+      return res.json()
 
 # 获取collection数量
 def collection_get_count():
-    return persistent_client.count_collections()
+    return http_client.count_collections()
 
 
 # 根据名称获取collection详细信息
 def collection_get_detail(name: str):
-    collection = persistent_client.get_collection(name)
+    collection = http_client.get_collection(name)
     res = collection.get()
     res["collection"] = collection.name
     return res
@@ -44,7 +48,7 @@ def collection_get_detail(name: str):
 
 # 获取所有collection信息
 def collection_get_all():
-    collections = persistent_client.list_collections(limit=10, offset=0)
+    collections = http_client.list_collections(limit=10, offset=0)
     res = []
     for i in collections:
         name = i.name
@@ -54,7 +58,7 @@ def collection_get_all():
 
 # 删除collection
 def collection_delete(name: str):
-    persistent_client.delete_collection(name=name)
+    http_client.delete_collection(name=name)
 
 
 # 根据document id和document, 单量更新document
@@ -64,25 +68,36 @@ def document_update(document_id: str, document: Document):
 
 # 创建database
 def database_create(name: str, tenant: str):
-    admin_client.create_database(name=name, tenant=tenant)
+    res = requests.post(
+        f"{base_url}/databases", params={"tenant": tenant}, json={"name": name}
+    )
+    if res.status_code == 200:
+        return "OK"
 
 
 # 获取database
 def database_get(name: str, tenant: str):
-    admin_client.get_database(name=name, tenant=tenant)
+    res = requests.get(f"{base_url}/databases/{name}", params={"tenant": tenant})
+    if res.status_code == 200:
+        return res.json()
 
 
 # 创建tenant
 def tenant_create(name: str):
-    admin_client.create_tenant(name=name)
+    res = requests.post(f"{base_url}/tenants", json={"name": name})
+    if res.status_code == 200:
+        return "OK"
 
 
 # 获取tenant
 def tenant_get(name: str):
-    tenant = admin_client.get_tenant(name=name)
-    return tenant
+    res = requests.get(f"{base_url}/tenants/{name}")
+    if res.status_code == 200:
+        return res.json()
 
 
 # 敏感操作: 重置数据库
-def reset():
-    persistent_client.reset()
+def reset_vector_db():
+    res = requests.post(f"{base_url}/reset")
+    if res.status_code == 200:
+        return "OK"

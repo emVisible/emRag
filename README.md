@@ -37,7 +37,7 @@
 1. Xinference
 Linux下启动
 ```
-  > XINFERENCE_MODEL_SRC=modelscope xinference-local --host 0.0.0.0 --port 9997
+  XINFERENCE_MODEL_SRC=modelscope xinference-local --host 0.0.0.0 --port 9997
 ```
 windows下启动
 ```

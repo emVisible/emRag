@@ -61,6 +61,8 @@ def log_msg():
         )
     )
 
+    print(f"[VECTOR_DATABASE] chroma url: {getenv('CHROMA_ADDR')}".ljust(max_length))
+
 
 # 路由标签
 class Tags(Enum):

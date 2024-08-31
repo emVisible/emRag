@@ -1,5 +1,5 @@
 from pydantic import BaseModel
 
 
-class CreateOrGetTenantType(BaseModel):
+class CreateOrGetTenantDto(BaseModel):
     name: str

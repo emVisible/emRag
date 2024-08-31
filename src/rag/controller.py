@@ -90,15 +90,3 @@ async def upload_single(file: UploadFile = File(...)):
 async def generate():
     embedding_all_from_dir()
 
-
-@route_rag.post(
-    "/gc",
-    summary="[RAG] 清空数据库",
-    response_description="返回是否成功",
-    status_code=status.HTTP_200_OK,
-    tags=[Tags.rag],
-)
-async def gc():
-    status = service.gc()
-    if status == 1:
-        return {"data": "GC回收OK", "code": status.HTTP_200_OK, "msg": "暂无"}
