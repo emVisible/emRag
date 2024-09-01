@@ -12,6 +12,7 @@ from .database import get_db
 from .schemas import UserSchemas
 from .service_user import (
     create_user,
+    permission_map,
     get_current_user,
     get_user_by_account,
     get_user_by_email,
@@ -106,10 +107,13 @@ async def login_for_access_token(
     summary="获取当前用户",
     status_code=status.HTTP_200_OK,
     response_description="返回当前用户的信息",
-    response_model=UserSchemas,
     tags=[Tags.auth],
 )
 async def check_current_user(
     user: UserSchemas = Depends(get_current_user),
 ):
-    return user
+    res = {}
+    res["name"] = user.name
+    res["email"] = user.email
+    res["permissions"] = permission_map(user.role_id)
+    return res

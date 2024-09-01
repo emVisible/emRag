@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from . import models, schemas
 from .schemas import UserSchemas, TokenSchemas, TokenDataSchemas
 from .models import User
-from .auth.service_auth import  hash_password, oauth2_scheme
+from .auth.service_auth import hash_password, oauth2_scheme
 from src.config import secret_key, algorithm
 from .database import get_db
 
@@ -76,3 +76,14 @@ def get_current_user(
     if not user:
         raise credential_exception
     return user
+
+
+def permission_map(permission_id: int):
+    map = {
+        1: ["student"],
+        2: ["student", "teacher"],
+        3: ["student", "teacher", "director"],
+        4: ["student", "teacher", "director", "admin"],
+        5: ["student", "teacher", "director", "admin", "root"],
+    }
+    return map[permission_id]

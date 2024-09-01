@@ -1,6 +1,9 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 
 from src.utils import Tags
+from sqlalchemy.orm import Session
+from src.base.models import Tenant, Database, Collection
+from src.base.database import get_db
 
 from .dto.collection import GetCollectionDto, CreateCollectionDto
 from .dto.tenant import CreateOrGetTenantDto
@@ -25,8 +28,19 @@ route_vector = APIRouter(prefix="/vector_store")
     status_code=status.HTTP_200_OK,
     tags=[Tags.vector_db],
 )
-async def get_collections():
-    return collection_get_all()
+async def get_collections(db: Session = Depends(get_db)):
+    res = []
+    collections = db.query(Collection).all()
+    for index, collection in enumerate(collections):
+        item = {}
+        item["id"] = index + 1
+        item["name"] = collection.name
+        item["vest_database"] = db.query(Database).filter(Database.id == collection.database_id).first().name
+        item["vest_tenant"] = (
+            db.query(Tenant).filter(Tenant.id == collection.database_id).first().name
+        )
+        res.append(item)
+    return res
 
 
 @route_vector.post(
@@ -53,12 +67,17 @@ async def create_collection(dto: CreateCollectionDto):
     tenant_name = dto.tenant_name
     database_name = dto.database_name
     metadata = dto.metadata
-    return collection_create(name=name, tenant_name=tenant_name, database_name=database_name, metadata=metadata)
+    return collection_create(
+        name=name,
+        tenant_name=tenant_name,
+        database_name=database_name,
+        metadata=metadata,
+    )
 
 
 @route_vector.post(
     "/database/get",
-    summary="[Vector Database] 根据名称返回collection",
+    summary="[Vector Database] 根据名称返回database",
     response_description="返回是否成功",
     status_code=status.HTTP_200_OK,
     tags=[Tags.vector_db],
@@ -69,9 +88,20 @@ async def get_database(dto: GetDatabaseDto):
     return database_get(name=name, tenant=tenant)
 
 
+@route_vector.get(
+    "/databases",
+    summary="[Vector Database] 返回所有database",
+    response_description="返回是否成功",
+    status_code=status.HTTP_200_OK,
+    tags=[Tags.vector_db],
+)
+async def get_database(db: Session = Depends(get_db)):
+    return db.query(Database).all()
+
+
 @route_vector.post(
     "/database/create",
-    summary="[Vector Database] 根据名称返回collection",
+    summary="[Vector Database] 创建database",
     response_description="返回是否成功",
     status_code=status.HTTP_200_OK,
     tags=[Tags.vector_db],
@@ -95,9 +125,20 @@ async def create_tenant(dto: CreateOrGetTenantDto):
     return "OK"
 
 
+@route_vector.get(
+    "/tenants",
+    summary="[Vector Database] 获取所有tenants",
+    response_description="返回是否成功",
+    status_code=status.HTTP_200_OK,
+    tags=[Tags.vector_db],
+)
+async def get_all_tenants(db: Session = Depends(get_db)):
+    return db.query(Tenant).all()
+
+
 @route_vector.post(
     "/tenant/get",
-    summary="[Vector Database] 获取tenant",
+    summary="[Vector Database] 根据名称获取tenant",
     response_description="返回是否成功",
     status_code=status.HTTP_200_OK,
     tags=[Tags.vector_db],

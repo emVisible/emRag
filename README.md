@@ -4,13 +4,19 @@
 项目旨在搭建一个RAG本地知识库系统, 基于FastAPI进行API拓展开发
 业务人员导入文档作为检索数据源, 模型提供基础储存、检索、回答能力, 以此来高效地解决实际生活中的问答情景
 
-示例配置:
+示例配置( 服务器 / 正常开发 ):
 - GPU: 3090 x 2
 - Engine: vLLM
 - LLM:       qwen2-instruct(7b)          卡0
 - Embedding: bge-large-zh-v1.5    (1.5G) 卡1
 - Rerank:    bge-reranker-v2-gemma(11G)  卡1
 
+示例配置( 节约开发 / 本地 ):
+- GPU: 3090x1 或 笔记本自带显卡
+- Engine: Transformers
+- LLM:       qwen2-instruct(1.5b)
+- Embedding: bge-large-zh-v1.5
+- Rerank:    bge-reranker-base_v1
 ## 依赖安装
 所需依赖安装
 ```

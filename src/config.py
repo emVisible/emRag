@@ -10,7 +10,6 @@ chunk_overlap = getenv("CHUNK_OVERLAP") or 50
 
 db_addr = getenv("DB_ADDR")
 doc_addr = getenv("DOC_ADDR")
-output_addr = getenv("OUTPUT_ADDR")
 temp_file_addr = getenv("TEMP_FILE_ADDR")
 
 
