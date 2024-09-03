@@ -1,10 +1,11 @@
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, UploadFile, File
 
 from src.utils import Tags
 from sqlalchemy.orm import Session
 from src.base.models import Tenant, Database, Collection
 from src.base.database import get_db
 
+from .document_loader import embedding_all_from_dir, embedding_document
 from .dto.collection import GetCollectionDto, CreateCollectionDto
 from .dto.tenant import CreateOrGetTenantDto
 from .dto.database import GetDatabaseDto, CreateDatabaseDto
@@ -35,7 +36,12 @@ async def get_collections(db: Session = Depends(get_db)):
         item = {}
         item["id"] = index + 1
         item["name"] = collection.name
-        item["vest_database"] = db.query(Database).filter(Database.id == collection.database_id).first().name
+        item["vest_database"] = (
+            db.query(Database)
+            .filter(Database.id == collection.database_id)
+            .first()
+            .name
+        )
         item["vest_tenant"] = (
             db.query(Tenant).filter(Tenant.id == collection.database_id).first().name
         )
@@ -146,3 +152,25 @@ async def get_all_tenants(db: Session = Depends(get_db)):
 async def create_collection(dto: CreateOrGetTenantDto):
     name = dto.name
     return tenant_get(name=name)
+
+
+@route_vector.post(
+    "/upload_single",
+    summary="[RAG] 根据单一文档转换为矢量",
+    response_description="返回是否成功",
+    status_code=status.HTTP_200_OK,
+    tags=[Tags.vector_db],
+)
+async def upload_single(file: UploadFile = File(...)):
+    return embedding_document(file)
+
+
+@route_vector.post(
+    "/generate",
+    summary="[RAG] 批量创建矢量库",
+    response_description="返回是否成功",
+    status_code=status.HTTP_200_OK,
+    tags=[Tags.vector_db],
+)
+async def generate():
+    embedding_all_from_dir()

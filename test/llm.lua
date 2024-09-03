@@ -1,5 +1,5 @@
 local data = [[{
-  "prompt": "浙外章程第三十九条原文是什么？",
+  "prompt": "介绍一下浙外",
   "system_prompt": "",
   "chat_history": []
 }]]
@@ -13,10 +13,8 @@ local response_data = ""
 
 -- 请求函数
 function request()
-    -- 打印请求信息（调试用）
-    print("Sending request with body:", wrk.body)
     -- 返回构造的请求
-    return wrk.format(wrk.method, "/api/rag/chat", wrk.headers, wrk.body)
+    return wrk.format(wrk.method, "/api/llm/chat", wrk.headers, wrk.body)
 end
 
 -- 响应函数

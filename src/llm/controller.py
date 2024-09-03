@@ -6,16 +6,15 @@ from fastapi.responses import StreamingResponse
 from starlette.responses import StreamingResponse
 from xinference.client import RESTfulClient
 from asyncio import Lock, sleep, Semaphore
+from src.xinference.service import llm_model
 
 
 from ..utils import Tags
 from .dto.chat import ChatDto
-from ..config import xinference_addr, xinference_llm_model_id
+from ..config import xinference_addr, xinference_llm_model_id, system_prompt_llm
 
 route_llm = APIRouter(prefix="/llm")
 model_lock = Lock()
-client = RESTfulClient(base_url=xinference_addr or "http://127.0.0.1:9997")
-model = client.get_model(model_uid=xinference_llm_model_id or "qwen2-instruct")
 semaphore = Semaphore(5)
 
 
@@ -28,15 +27,13 @@ semaphore = Semaphore(5)
 )
 async def chat(body: ChatDto):
     prompt = body.prompt
-    system_prompt = body.system_prompt
     chat_history = body.chat_history
 
     # 通过XINFERENCE Client联通, 对LLM模型发送chat API
     async with model_lock:
-        res = model.chat(
+        res = llm_model.chat(
             prompt=prompt,
-            system_prompt=system_prompt
-            or """你是浙江外国语学院(浙外)问答助手, 根据用户提供的上下文信息, 负责准确回答师生的提问, 对于有已知信息需要筛选的, 给出原数据结果""",
+            system_prompt=system_prompt_llm,
             chat_history=chat_history,
             generate_config={
                 "stream": True,
@@ -49,8 +46,7 @@ async def chat(body: ChatDto):
             cache = dumps(chunk["choices"][0]["delta"]["content"]) + "\n"
             if cache:
                 yield cache
-            await sleep(0)  # 确保其他协程有机会运行
-
+            await sleep(0)
 
     return StreamingResponse(
         content=streaming_response_iterator(),
@@ -61,18 +57,12 @@ async def chat(body: ChatDto):
 
 async def chat_none_stream(body: ChatDto):
     prompt = body.prompt
-    system_prompt = body.system_prompt
     chat_history = body.chat_history
 
     # 通过XINFERENCE Client联通, 对LLM模型发送chat API
-    client = RESTfulClient(base_url=xinference_addr or "http://127.0.0.1:9997")
-    model = client.get_model(model_uid=xinference_llm_model_id or "qwen2-instruct")
-    res = model.chat(
+    res = llm_model.chat(
         prompt=prompt,
-        system_prompt=system_prompt
-        or """You are ZISU(浙江外国语学院, 简称浙外) helper, Follow the user's instructions carefully.
-        Respond using markdown format, bold important point, response content needs to be travel-related.
-        Respond in Chinese""",
+        system_prompt=system_prompt_llm,
         chat_history=chat_history,
     )
     if res:

@@ -1,26 +1,16 @@
+from asyncio import get_running_loop
+
 from langchain_chroma import Chroma
 from langchain_community.embeddings import XinferenceEmbeddings
-from xinference.client import Client
-from os import getenv
 
+from src.xinference.service import rerank_model
+
+from ..config import db_addr, k, xinference_addr, xinference_embedding_model_id
 from .dto.rearank import RerankResultSchemas
-from ..utils import log
-from ..config import (
-    xinference_addr,
-    xinference_embedding_model_id,
-    xinference_rerank_model_id,
-    db_addr,
-    k,
-)
-
-# 加载配置
-client = Client(base_url=xinference_addr)
-rerank_model = client.get_model(xinference_rerank_model_id)
 
 
 # rag文档检索, 通过文本转换为向量, 通过向量检索以及rerank返回合适结果
-@log("RAG搜索中... (1/2)")
-def similarity_search(question: str) -> str:
+async def similarity_search(question: str) -> str:
     embedding_function = XinferenceEmbeddings(
         server_url=xinference_addr, model_uid=xinference_embedding_model_id
     )
@@ -29,10 +19,10 @@ def similarity_search(question: str) -> str:
     context = db.similarity_search(query=question, k=k)
     documents = []
     for chunk in context:
-        print(f"chunk元数据: {chunk.metadata}")
         documents.append(chunk.page_content)
-    res: RerankResultSchemas = rerank_model.rerank(
-        documents=documents, query=question, return_documents=True
+    loop = get_running_loop()
+    res: RerankResultSchemas = await loop.run_in_executor(
+        None, rerank_model.rerank, documents, question, None, None, True
     )
     shuffled_res = sorted(
         res["results"], key=lambda x: x["relevance_score"], reverse=True
@@ -41,8 +31,7 @@ def similarity_search(question: str) -> str:
 
 
 # 根据检索结果生成一个Context, 构建提问词
-@log("提问词生成中... (2/2)")
-def create_prompt(question: str, context: str) -> str:
+async def create_prompt(question: str, context: str) -> str:
     prompt_template = f"""
     [问题]:
       {question}
@@ -50,11 +39,3 @@ def create_prompt(question: str, context: str) -> str:
       {context}
     """
     return prompt_template
-
-
-# 清空对话, 清空向量数据库中的对话相关数据
-@log("向量库清除中...")
-def gc() -> None:
-    vector_db = Chroma(persist_directory=db_addr)
-    vector_db.delete_collection()
-    print("[System] GC回收完毕")
