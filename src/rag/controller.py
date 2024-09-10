@@ -1,4 +1,4 @@
-from asyncio import Lock, Semaphore, sleep
+from asyncio import Lock, sleep
 from json import dumps
 
 from fastapi import APIRouter, status
@@ -7,13 +7,12 @@ from fastapi.responses import StreamingResponse
 from src.xinference.service import llm_model
 
 from ..config import system_prompt_rag
-from ..llm.dto.chat import ChatDto
+from ..llm.dto.chat import RAGChatDto
 from ..utils import Tags
 from . import service
 
 route_rag = APIRouter(prefix="/rag")
 model_lock = Lock()
-semaphore = Semaphore(5)
 
 
 """
@@ -31,11 +30,13 @@ semaphore = Semaphore(5)
     status_code=status.HTTP_200_OK,
     tags=[Tags.rag],
 )
-async def search(body: ChatDto):
+async def search(body: RAGChatDto):
     prompt = body.prompt
     chat_history = body.chat_history
-
-    context = await service.similarity_search(question=prompt)
+    collection_name = body.collection_name
+    context = await service.similarity_search(
+        question=prompt, collection_name=collection_name
+    )
     prompt = await service.create_prompt(question=prompt, context=context)
 
     async with model_lock:

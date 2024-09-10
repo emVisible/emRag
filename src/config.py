@@ -38,7 +38,6 @@ chunk_overlap = getenv("CHUNK_OVERLAP") or 50
 
 db_addr = getenv("DB_ADDR")
 doc_addr = getenv("DOC_ADDR")
-temp_file_addr = getenv("TEMP_FILE_ADDR")
 
 
 xinference_addr = getenv("XINFERENCE_ADDR") or "http://127.0.0.1:9997"

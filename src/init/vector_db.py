@@ -49,7 +49,7 @@ async def collections_init(db: Session):
     database_id = (
         db.query(Database)
         .filter(
-            Database.tenant_name == "School of Education" and Database.name == "public"
+            Database.tenant_name == "School of Asian Languages and Cultures" and Database.name == "public"
         )
         .first()
         .id

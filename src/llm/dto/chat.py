@@ -11,7 +11,12 @@ class ChatCompletionMessage(TypedDict):
     tool_calls: NotRequired[List]
 
 
-class ChatDto(BaseModel):
+class LLMChatDto(BaseModel):
     prompt: str
+    system_prompt: Optional[str] = None
+    chat_history: Optional[List["ChatCompletionMessage"]] = []
+class RAGChatDto(BaseModel):
+    prompt: str
+    collection_name: str
     system_prompt: Optional[str] = None
     chat_history: Optional[List["ChatCompletionMessage"]] = []

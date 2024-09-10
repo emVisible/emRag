@@ -1,37 +1,28 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from langchain_community.embeddings import XinferenceEmbeddings
-from langchain_chroma import Chroma
 import requests
-from chromadb import AsyncHttpClient, HttpClient
-from chromadb.config import Settings
+from chromadb import HttpClient
+from langchain_chroma import Chroma
+from langchain_community.embeddings import XinferenceEmbeddings
 from langchain_core.documents import Document
-from json import dumps
-from src.config import chroma_addr
-from typing import List
 
-from src.config import (
-    db_addr,
-    xinference_addr,
-    xinference_embedding_model_id,
-)
+from src.config import chroma_addr, xinference_addr, xinference_embedding_model_id
 
 embedding_function = XinferenceEmbeddings(
     model_uid=xinference_embedding_model_id, server_url=xinference_addr
 )
-
 http_client = HttpClient(host="127.0.0.1", port=8080)
 base_url = chroma_addr
 
 
 # 创建collection
-def collection_create(name: str, tenant_name: str, database_name: str, metadata:dict):
-    res = requests.post(
-        f"{base_url}/collections",
-        params={"tenant": tenant_name, "database": database_name},
-        json={"name": name, "configuration": {}, "metadata": metadata, "get_or_create": "true"},
+def collection_create(name: str, tenant_name: str, database_name: str, metadata: dict):
+    Chroma.from_documents(
+        documents=[Document(f"集合名为:{name}, 简介:{metadata}")],
+        embedding=embedding_function,
+        collection_name=name,
+        client=http_client,
     )
-    if res.status_code == 200:
-      return res.json()
+    return "ok"
+
 
 # 获取collection数量
 def collection_get_count():
@@ -53,6 +44,14 @@ def collection_get_all():
     for i in collections:
         name = i.name
         res.append({"collection": name, **i.get()})
+    return res
+
+
+def collection_get_name_all():
+    collections = http_client.list_collections(limit=10, offset=0)
+    res = []
+    for i in collections:
+        res.append(i.name)
     return res
 
 

@@ -10,11 +10,15 @@ from .dto.rearank import RerankResultSchemas
 
 
 # rag文档检索, 通过文本转换为向量, 通过向量检索以及rerank返回合适结果
-async def similarity_search(question: str) -> str:
+async def similarity_search(question: str, collection_name: str) -> str:
     embedding_function = XinferenceEmbeddings(
         server_url=xinference_addr, model_uid=xinference_embedding_model_id
     )
-    db = Chroma(persist_directory=db_addr, embedding_function=embedding_function)
+    db = Chroma(
+        persist_directory=db_addr,
+        embedding_function=embedding_function,
+        collection_name=collection_name,
+    )
     question = f"{question or '介绍一下杭州'}"
     context = db.similarity_search(query=question, k=k)
     documents = []

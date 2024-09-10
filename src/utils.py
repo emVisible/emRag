@@ -55,7 +55,6 @@ def log_msg():
     logger.critical(f"[PATH-ROOT] {env_path}")
     logger.critical(f"[PATH-DB] {getenv('DB_ADDR')}")
     logger.critical(f"[PATH-DOC] {getenv('DOC_ADDR')}")
-    logger.critical(f"[PATH-TEMP] {getenv('TEMP_FILE_ADDR')}")
 
     logger.critical(f"[RAG-PARAM] k: {getenv('K')}")
     logger.critical(f"[RAG-PARAM] chunk_size: {getenv('CHUNK_SIZE')}")

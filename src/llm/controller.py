@@ -1,17 +1,15 @@
-from json import dumps, loads
-from os import getenv
+from asyncio import Lock, Semaphore, sleep
+from json import dumps
 
-from fastapi import APIRouter, status, WebSocket
+from fastapi import APIRouter, status
 from fastapi.responses import StreamingResponse
 from starlette.responses import StreamingResponse
-from xinference.client import RESTfulClient
-from asyncio import Lock, sleep, Semaphore
+
 from src.xinference.service import llm_model
 
-
+from ..config import system_prompt_llm
 from ..utils import Tags
-from .dto.chat import ChatDto
-from ..config import xinference_addr, xinference_llm_model_id, system_prompt_llm
+from .dto.chat import LLMChatDto
 
 route_llm = APIRouter(prefix="/llm")
 model_lock = Lock()
@@ -25,7 +23,7 @@ semaphore = Semaphore(5)
     status_code=status.HTTP_200_OK,
     tags=[Tags.llm],
 )
-async def chat(body: ChatDto):
+async def chat(body: LLMChatDto):
     prompt = body.prompt
     chat_history = body.chat_history
 
@@ -55,7 +53,7 @@ async def chat(body: ChatDto):
     )
 
 
-async def chat_none_stream(body: ChatDto):
+async def chat_none_stream(body: LLMChatDto):
     prompt = body.prompt
     chat_history = body.chat_history
 

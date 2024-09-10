@@ -2,7 +2,6 @@
 import glob
 import os
 import shutil
-
 # import torch
 from multiprocessing import Pool
 from pathlib import Path
@@ -13,30 +12,15 @@ from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
 from langchain_community.document_loaders import (
-    CSVLoader,
-    EverNoteLoader,
-    PDFMinerLoader,
-    TextLoader,
-    UnstructuredEmailLoader,
-    UnstructuredEPubLoader,
-    UnstructuredExcelLoader,
-    UnstructuredHTMLLoader,
-    UnstructuredMarkdownLoader,
-    UnstructuredODTLoader,
-    UnstructuredPowerPointLoader,
-    UnstructuredWordDocumentLoader,
-)
+    CSVLoader, EverNoteLoader, PDFMinerLoader, TextLoader,
+    UnstructuredEmailLoader, UnstructuredEPubLoader, UnstructuredExcelLoader,
+    UnstructuredHTMLLoader, UnstructuredMarkdownLoader, UnstructuredODTLoader,
+    UnstructuredPowerPointLoader, UnstructuredWordDocumentLoader)
 from langchain_community.embeddings import XinferenceEmbeddings
 from tqdm import tqdm
 
-from ..config import (
-    chunk_overlap,
-    chunk_size,
-    db_addr,
-    doc_addr,
-    xinference_embedding_model_id,
-    xinference_addr,
-)
+from ..config import (chunk_overlap, chunk_size, db_addr, doc_addr,
+                      xinference_addr, xinference_embedding_model_id)
 
 
 # 自定义文档加载器 document loader
@@ -130,10 +114,10 @@ def process_documents(ignored_files: List[str] = []) -> List[Document]:
     return texts
 
 
-def embedding_document(file: UploadFile = File(...)):
-    tmp_dir = os.getenv("TEMP_FILE_ADDR")
-    Path(f"{tmp_dir}").mkdir(parents=True, exist_ok=True)
-    tmp_save_path_obj = Path(f"{tmp_dir}/{file.filename}")
+def embedding_document(collection_name:str, file: UploadFile = File(...)):
+    doc_dir = os.getenv("DOC_ADDR")
+    Path(f"{doc_dir}").mkdir(parents=True, exist_ok=True)
+    tmp_save_path_obj = Path(f"{doc_dir}/{file.filename}")
     tmp_save_path = str(tmp_save_path_obj)
     try:
         with open(tmp_save_path, "wb") as tmp_f:
@@ -143,6 +127,7 @@ def embedding_document(file: UploadFile = File(...)):
             server_url=xinference_addr, model_uid=xinference_embedding_model_id
         )
         Chroma.from_documents(
+            collection_name=collection_name,
             documents=documents,
             embedding=embedding_function,
             persist_directory=db_addr,

@@ -1,22 +1,22 @@
-from fastapi import APIRouter, HTTPException, status, Depends, UploadFile, File
-
-from src.utils import Tags
+from fastapi import APIRouter, Depends, File, UploadFile, status
 from sqlalchemy.orm import Session
-from src.base.models import Tenant, Database, Collection
+
 from src.base.database import get_db
+from src.base.models import Collection, Database, Tenant
+from src.utils import Tags
 
 from .document_loader import embedding_all_from_dir, embedding_document
-from .dto.collection import GetCollectionDto, CreateCollectionDto
+from .dto.collection import CreateCollectionDto, GetCollectionDto
+from .dto.database import CreateDatabaseDto, GetDatabaseDto
 from .dto.tenant import CreateOrGetTenantDto
-from .dto.database import GetDatabaseDto, CreateDatabaseDto
 from .service import (
     collection_create,
-    collection_get_all,
     collection_get_detail,
-    tenant_create,
-    tenant_get,
+    collection_get_name_all,
     database_create,
     database_get,
+    tenant_create,
+    tenant_get,
 )
 
 route_vector = APIRouter(prefix="/vector_store")
@@ -61,6 +61,17 @@ async def get_collection(dto: GetCollectionDto):
     return collection_get_detail(name)
 
 
+@route_vector.get(
+    "/collection/names",
+    summary="[Vector Database] 返回collections的name列表",
+    response_description="返回是否成功",
+    status_code=status.HTTP_200_OK,
+    tags=[Tags.vector_db],
+)
+async def get_collection_names():
+    return collection_get_name_all()
+
+
 @route_vector.post(
     "/collection/create",
     summary="[Vector Database] 创建collection",
@@ -68,11 +79,19 @@ async def get_collection(dto: GetCollectionDto):
     status_code=status.HTTP_200_OK,
     tags=[Tags.vector_db],
 )
-async def create_collection(dto: CreateCollectionDto):
+async def create_collection(dto: CreateCollectionDto, db: Session = Depends(get_db)):
     name = dto.name
     tenant_name = dto.tenant_name
     database_name = dto.database_name
     metadata = dto.metadata
+    aim_db_id = (
+        db.query(Database)
+        .filter(Database.tenant_name == tenant_name and Database.name == database_name)
+        .first()
+        .id
+    )
+    db.add(Collection(name=name, database_id=aim_db_id))
+    db.commit()
     return collection_create(
         name=name,
         tenant_name=tenant_name,
@@ -112,9 +131,11 @@ async def get_database(db: Session = Depends(get_db)):
     status_code=status.HTTP_200_OK,
     tags=[Tags.vector_db],
 )
-async def create_database(dto: CreateDatabaseDto):
+async def create_database(dto: CreateDatabaseDto, db: Session = Depends(get_db)):
     name = dto.name
     tenant = dto.tenant
+    db.add(Database(name=name, tenant_name=tenant))
+    db.commit()
     return database_create(name=name, tenant=tenant)
 
 
@@ -125,9 +146,11 @@ async def create_database(dto: CreateDatabaseDto):
     status_code=status.HTTP_200_OK,
     tags=[Tags.vector_db],
 )
-async def create_tenant(dto: CreateOrGetTenantDto):
+async def create_tenant(dto: CreateOrGetTenantDto, db: Session = Depends(get_db)):
     name = dto.name
     tenant_create(name=name)
+    db.add(Tenant(name=name))
+    db.commit()
     return "OK"
 
 
@@ -155,14 +178,14 @@ async def create_collection(dto: CreateOrGetTenantDto):
 
 
 @route_vector.post(
-    "/upload_single",
+    "/upload_single/{collection_name}",
     summary="[RAG] 根据单一文档转换为矢量",
     response_description="返回是否成功",
     status_code=status.HTTP_200_OK,
     tags=[Tags.vector_db],
 )
-async def upload_single(file: UploadFile = File(...)):
-    return embedding_document(file)
+async def upload_single(collection_name: str, file: UploadFile = File(...)):
+    return embedding_document(collection_name=collection_name, file=file)
 
 
 @route_vector.post(
