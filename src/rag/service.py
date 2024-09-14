@@ -28,9 +28,10 @@ async def similarity_search(question: str, collection_name: str) -> str:
     res: RerankResultSchemas = await loop.run_in_executor(
         None, rerank_model.rerank, documents, question, None, None, True
     )
-    shuffled_res = sorted(
+    filter_res = sorted(
         res["results"], key=lambda x: x["relevance_score"], reverse=True
     )[:3]
+    shuffled_res = [item for item in filter_res if item["relevance_score"] > 0]
     return shuffled_res
 
 
