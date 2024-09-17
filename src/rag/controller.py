@@ -6,14 +6,15 @@ from fastapi.responses import StreamingResponse
 
 from src.xinference.service import llm_model
 
-from ..config import system_prompt_rag
+from ..config import max_model_len
 from ..llm.dto.chat import RAGChatDto
+from ..prompt import system_prompt_rag
 from ..utils import Tags
 from . import service
 
 route_rag = APIRouter(prefix="/rag")
-model_lock = Lock()
 
+model_lock = Lock()
 
 """
   1. 调用LangChain, 检索文档
@@ -31,14 +32,17 @@ model_lock = Lock()
     tags=[Tags.rag],
 )
 async def search(body: RAGChatDto):
-    prompt = body.prompt
+    raw_prompt = body.prompt
     chat_history = body.chat_history
     collection_name = body.collection_name
     context = await service.similarity_search(
-        question=prompt, collection_name=collection_name
+        question=raw_prompt, collection_name=collection_name
     )
-    prompt = await service.create_prompt(question=prompt, context=context)
-
+    prompt = await service.create_system_dynamic_prompt(
+        question=raw_prompt, context=context
+    )
+    if len(prompt) > int(max_model_len):
+        prompt = prompt[:max_model_len]
     async with model_lock:
         res = llm_model.chat(
             prompt=prompt,

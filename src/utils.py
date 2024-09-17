@@ -75,6 +75,7 @@ def log_msg():
 
 # 路由标签
 class Tags(Enum):
+    dev = "DEV"
     rag = "RAG"
     llm = "LLM"
     user = "User"
