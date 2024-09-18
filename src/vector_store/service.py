@@ -25,8 +25,8 @@ def collection_create(name: str, tenant_name: str, database_name: str, metadata:
 
 
 # 获取collection数量
-def collection_get_count():
-    return http_client.count_collections()
+def get_collection_names():
+    return http_client.list_collections()
 
 
 # 根据名称获取collection详细信息

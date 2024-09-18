@@ -13,6 +13,7 @@ from .service import (
     collection_create,
     collection_get_detail,
     collection_get_name_all,
+    get_collection_names,
     database_create,
     database_get,
     tenant_create,
@@ -197,3 +198,18 @@ async def upload_single(collection_name: str, file: UploadFile = File(...)):
 )
 async def generate():
     embedding_all_from_dir()
+
+@route_vector.get(
+    "/collections/get_detail_all",
+    summary="[Vector Database] 返回collections detail",
+    response_description="返回是否成功",
+    status_code=status.HTTP_200_OK,
+    tags=[Tags.dev],
+)
+async def collections_detail_all():
+  names = await get_collection_names()
+  res = []
+  for name in names:
+    part = collection_get_detail(name)
+    res.append(part)
+  return res
