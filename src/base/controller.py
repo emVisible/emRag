@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from ..utils import Tags
 from .auth.service_auth import authenticate_user, create_access_token
 from .database import get_db
-from .schemas import UserSchemas
+from .schemas import UserBase, UserSchemas
 from .service_user import (
     create_user,
     permission_map,
@@ -35,7 +35,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(
     status_code=status.HTTP_201_CREATED,
     tags=[Tags.user],
 )
-def create_user_route(user: UserSchemas, db: Session = Depends(get_db)):
+def create_user_route(user: UserBase, db: Session = Depends(get_db)):
     db_user = get_user_by_email(db=db, user_email=user.email)
     if db_user:
         raise HTTPException(

@@ -4,20 +4,20 @@ from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
 from . import models, schemas
-from .schemas import UserSchemas, TokenSchemas, TokenDataSchemas
+from .schemas import UserSchemas, TokenSchemas, TokenDataSchemas, UserBase
 from .models import User
 from .auth.service_auth import hash_password, oauth2_scheme
 from src.config import secret_key, algorithm
 from .database import get_db
 
 
-def create_user(db: Session, user: UserSchemas):
+def create_user(db: Session, user: UserBase):
     hashed_passwd = hash_password(user.password)
     new_user = User(
         email=user.email,
         name=user.name,
         password=hashed_passwd,
-        role_id=user.role_id or 1,
+        role_id=1,
     )
     db.add(new_user)
     db.commit()

@@ -39,7 +39,10 @@
    - Rerank模型: bge-reranker-v2-m3 或 bge-reranker-v2-gemma
 
 ## 项目启动
-
+切换至对应环境
+```
+  conda activate lexinaut
+```
 1. Xinference
 Linux下启动
 ```
@@ -83,13 +86,18 @@ windows下启动
    ```
       ps -ef | grep python | grep -v grep | awk '{print $2}' | xargs kill -9
    ```
+5. torch与torchvision版本需要匹配: 0.23.0对应0.18.0
 
 ## 并发测试
 12线程400链接, 600秒测试
 
-LLM测试: 10分钟内可处理1000个请求, 平均每秒处理1.7个对话请求, 每个回答大约有700左右的字数
+LLM测试结果:
+GPU功率峰值可达280W, 平均在220W左右
+单张3090压力测试下, 最高平均响应约为1200tokens/s, 最多每秒同时响应120 request
+每秒在100对话并发情况下, 平均每个请求每秒响应10个字左右
+可处理1000个左右请求, 平均每秒处理1.7个对话请求 (每个回答大约有700左右的字数)
 ```
-  > wrk -t12 -c400 -d600 -s ./test.lua http://127.0.0.1:3000/api/llm/chat
+  > wrk -t12 -c400 -d600 -s ./llm.lua http://127.0.0.1:3000/api/llm/chat
 
   Running 10m test @ http://localhost:3000/api/llm/chat
   12 threads and 400 connections
