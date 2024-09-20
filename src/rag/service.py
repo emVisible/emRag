@@ -4,9 +4,12 @@ from langchain_chroma import Chroma
 
 from src.xinference.service import embedding_function, llm_model, rerank_model
 
-from ..config import db_addr, k
-from ..prompt import system_dynamic_prompt
+
+from logging import getLogger
+from ..config import db_addr, k, min_relevance_score
 from .dto.rearank import RerankResultSchemas
+
+logger = getLogger(__name__)
 
 
 async def rerank_loop(document: list[str], question: str):
@@ -18,8 +21,9 @@ async def rerank_loop(document: list[str], question: str):
 
 
 # rerank结果统一处理
-async def unify_filter(data: list[dict]):
+async def unify_filter(data: list[dict], question: str):
     res = []
+    log_msg = []
     for part in data:
         filter_res = sorted(
             part["results"], key=lambda x: x["relevance_score"], reverse=True
@@ -27,15 +31,28 @@ async def unify_filter(data: list[dict]):
         shuffled_res = [
             item["document"]["text"]
             for item in filter_res
-            if item["relevance_score"] > 0
+            if item["relevance_score"] > min_relevance_score
         ]
+        log_msg.append(
+            [
+                {
+                    "doc": item["document"]["text"][:30] + "...",
+                    "score": item["relevance_score"],
+                }
+                for item in filter_res
+                if item["relevance_score"] > min_relevance_score
+            ]
+        )
         if shuffled_res:
             res.append(shuffled_res)
         else:
             continue
+    logger.info(f"=========问题: {question}============")
+    logger.info(log_msg)
+    logger.info(f"====================================")
     if len(res) > 0:
         return res[0][0]
-    return "无"
+    return False
 
 
 # 分块rerank
@@ -58,20 +75,25 @@ async def similarity_search(question: str, collection_name: str) -> str:
     documents = [item.page_content for item in context]
     rerank_loop(document=documents, question=question)
     data = await batch_rerank(question=question, sourece_document=documents)
-    res = await unify_filter(data=data)
+    res = await unify_filter(data=data, question=question)
     return res
+
+
+# 静态提示词拼接
+async def create_system_static_prompt(question: str, context: str):
+    return f"[需要处理的问题]:\n{question}\n[已知文档信息]:\n{context or '(无参考信息, 请按提示要求返回)'}"
 
 
 # 动态提示词拼接
-async def create_system_dynamic_prompt(question: str, context: str):
-    res = llm_model.chat(
-        prompt=question,
-        system_prompt=system_dynamic_prompt,
-        chat_history=[],
-        generate_config={
-            "max_tokens": 1024,
-        },
-    )
-    prompt = res["choices"][0]["message"]["content"]
-    res = f"""[需要处理的问题]:\n{question}\n[可参考的提示]:\n{prompt}\n[已知文档信息]:\n{context}"""
-    return res
+# async def create_system_dynamic_prompt(question: str, context: str):
+#     res = llm_model.chat(
+#         prompt=question,
+#         system_prompt=system_dynamic_prompt,
+#         chat_history=[],
+#         generate_config={
+#             "max_tokens": 1024,
+#         },
+#     )
+#     prompt = res["choices"][0]["message"]["content"]
+#     res = f"""[需要处理的问题]:\n{question}\n[可参考的提示]:\n{prompt}\n[已知文档信息]:\n{context}"""
+#     return res

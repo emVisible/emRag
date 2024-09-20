@@ -22,8 +22,6 @@ model_lock = Lock()
   3. 合成提问Prompt
   4. 调用LLM, 返回结果
 """
-
-
 @route_rag.post(
     "/chat",
     summary="[RAG] 对话",
@@ -38,7 +36,7 @@ async def search(body: RAGChatDto):
     context = await service.similarity_search(
         question=raw_prompt, collection_name=collection_name
     )
-    prompt = await service.create_system_dynamic_prompt(
+    prompt = await service.create_system_static_prompt(
         question=raw_prompt, context=context
     )
     if len(prompt) > int(max_model_len):
@@ -53,14 +51,12 @@ async def search(body: RAGChatDto):
                 "max_tokens": 1024,
             },
         )
-
     async def streaming_response_iterator():
         for chunk in res:
             cache = dumps(chunk["choices"][0]["delta"]["content"]) + "\n"
             if cache:
                 yield cache
             await sleep(0)
-
     return StreamingResponse(
         content=streaming_response_iterator(),
         media_type="text/event-stream",

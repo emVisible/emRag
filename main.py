@@ -14,16 +14,16 @@ from src.base.models import Base
 from src.init.controller import route_init
 from src.llm.controller import route_llm
 from src.rag.controller import route_rag
-from src.utils import log_msg, logger
+from src.utils import log_msg, config_logger
 from src.vector_store.controller import route_vector
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     if is_available():
-        logger.critical("CUDA is available. Initializing...")
+        config_logger.critical("CUDA is available. Initializing...")
     else:
-        logger.critical("CUDA not available. Proceeding without GPU.")
+        config_logger.critical("CUDA not available. Proceeding without GPU.")
     yield
     if is_available():
         empty_cache()

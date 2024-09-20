@@ -9,6 +9,7 @@ k = int(getenv("K")) or 5
 chunk_size = getenv("CHUNK_SIZE") or 512
 chunk_overlap = getenv("CHUNK_OVERLAP") or 50
 max_model_len = getenv("MAX_MODEL_LEN") or 30000
+min_relevance_score = getenv("MIN_RELEVANCE_SCORE") or 2
 
 db_addr = getenv("DB_ADDR")
 doc_addr = getenv("DOC_ADDR")

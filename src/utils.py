@@ -1,5 +1,5 @@
 from enum import Enum
-from logging import CRITICAL, StreamHandler, getLogger
+from logging import INFO, CRITICAL, StreamHandler, getLogger, basicConfig
 from os import getenv
 from os.path import abspath, join
 from typing import Any, Optional, Union
@@ -19,13 +19,18 @@ formatter = ColoredFormatter(
     },
 )
 
-logger = getLogger("fastapi")
-logger.handlers.clear()
+config_logger = getLogger("fastapi")
+config_logger.handlers.clear()
 console_handler = StreamHandler()
 console_handler.setFormatter(formatter)
-logger.setLevel(CRITICAL)
-logger.addHandler(console_handler)
+config_logger.setLevel(CRITICAL)
+config_logger.addHandler(console_handler)
 
+file_log = basicConfig(
+    filename='lexinaut.log',  # 输出日志文件
+    level=INFO,   # 日志级别
+    format='%(asctime)s - %(levelname)s - %(message)s'  # 日志格式
+)
 
 # TODO: 路由使用response_model作为统一相应模型
 class ResponseModel(BaseModel):
@@ -47,30 +52,30 @@ def log(text: str):
 
 def log_msg():
     env_path = join(abspath("./"), ".env")
-    logger.critical(f"[AUTH-ALGORITHM] {getenv('ALGORITHM')}")
-    logger.critical(f"[AUTH-SECRET KEY] {getenv('SECRET_KEY')}")
-    logger.critical(
+    config_logger.critical(f"[AUTH-ALGORITHM] {getenv('ALGORITHM')}")
+    config_logger.critical(f"[AUTH-SECRET KEY] {getenv('SECRET_KEY')}")
+    config_logger.critical(
         f"[AUTH-ACCESS TOKEN EXPIRE TIME] {getenv('ACCESS_TOKEN_EXPIRE_MINUTES')}"
     )
-    logger.critical(f"[PATH-ROOT] {env_path}")
-    logger.critical(f"[PATH-DB] {getenv('DB_ADDR')}")
-    logger.critical(f"[PATH-DOC] {getenv('DOC_ADDR')}")
+    config_logger.critical(f"[PATH-ROOT] {env_path}")
+    config_logger.critical(f"[PATH-DB] {getenv('DB_ADDR')}")
+    config_logger.critical(f"[PATH-DOC] {getenv('DOC_ADDR')}")
 
-    logger.critical(f"[RAG-PARAM] k: {getenv('K')}")
-    logger.critical(f"[RAG-PARAM] chunk_size: {getenv('CHUNK_SIZE')}")
-    logger.critical(f"[RAG-PARAM] chunk_overlap: {getenv('CHUNK_OVERLAP')}")
+    config_logger.critical(f"[RAG-PARAM] k: {getenv('K')}")
+    config_logger.critical(f"[RAG-PARAM] chunk_size: {getenv('CHUNK_SIZE')}")
+    config_logger.critical(f"[RAG-PARAM] chunk_overlap: {getenv('CHUNK_OVERLAP')}")
 
-    logger.critical(f"[XINFERENCE] xinference url: {getenv('XINFERENCE_ADDR')}")
-    logger.critical(
+    config_logger.critical(f"[XINFERENCE] xinference url: {getenv('XINFERENCE_ADDR')}")
+    config_logger.critical(
         f"[XINFERENCE] xinference llm model id: {getenv('XINFERENCE_LLM_MODEL_ID')}"
     )
-    logger.critical(
+    config_logger.critical(
         f"[XINFERENCE] xinference embedding model id: {getenv('XINFERENCE_EMBEDDING_MODEL_ID')}"
     )
-    logger.critical(
+    config_logger.critical(
         f"[XINFERENCE] xinference rerank model id: {getenv('XINFERENCE_RERANK_MODEL_ID')}"
     )
-    logger.critical(f"[VECTOR_DATABASE] chroma url: {getenv('CHROMA_ADDR')}")
+    config_logger.critical(f"[VECTOR_DATABASE] chroma url: {getenv('CHROMA_ADDR')}")
 
 
 # 路由标签

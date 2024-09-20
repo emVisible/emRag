@@ -9,8 +9,10 @@ from .document_loader import embedding_all_from_dir, embedding_document
 from .dto.collection import CreateCollectionDto, GetCollectionDto
 from .dto.database import CreateDatabaseDto, GetDatabaseDto
 from .dto.tenant import CreateOrGetTenantDto
+from .dto.document import GetDocumentDto
 from .service import (
     collection_create,
+    get_document,
     collection_get_detail,
     collection_get_name_all,
     get_collection_names,
@@ -199,6 +201,7 @@ async def upload_single(collection_name: str, file: UploadFile = File(...)):
 async def generate():
     embedding_all_from_dir()
 
+
 @route_vector.get(
     "/collections/get_detail_all",
     summary="[Vector Database] 返回collections detail",
@@ -207,9 +210,24 @@ async def generate():
     tags=[Tags.dev],
 )
 async def collections_detail_all():
-  names = await get_collection_names()
-  res = []
-  for name in names:
-    part = collection_get_detail(name)
-    res.append(part)
-  return res
+    names = await get_collection_names()
+    print(names)
+    res = []
+    for name in names:
+        part = collection_get_detail(name)
+        res.append(part)
+    return res
+
+
+@route_vector.post(
+    "/collections/get_document",
+    summary="[Vector Database] 返回collections detail",
+    response_description="返回是否成功",
+    status_code=status.HTTP_200_OK,
+    tags=[Tags.dev],
+)
+async def document_detail_get(dto: GetDocumentDto):
+    collection_name = dto.collection_name
+    document_id = dto.document_id
+    res = get_document(collection_name=collection_name, document_id=document_id)
+    return res["documents"][0]

@@ -16,7 +16,7 @@ base_url = chroma_addr
 # 创建collection
 def collection_create(name: str, tenant_name: str, database_name: str, metadata: dict):
     Chroma.from_documents(
-        documents=[Document(f"集合名为:{name}, 简介:{metadata}")],
+        documents=[Document(f"{metadata}")],
         embedding=embedding_function,
         collection_name=name,
         client=http_client,
@@ -32,9 +32,35 @@ def get_collection_names():
 # 根据名称获取collection详细信息
 def collection_get_detail(name: str):
     collection = http_client.get_collection(name)
-    res = collection.get()
-    res["collection"] = collection.name
+    raw = collection.get()
+    res = []
+    name = collection.name
+    documents = raw["documents"]
+    ids = raw["ids"]
+    metadatas = raw["metadatas"]
+    for i in range(1, len(ids)):
+        item = {}
+        if not metadatas[i]:
+            continue
+        else:
+            item["metadata"] = metadatas[i]["source"].split("/")[-1]
+            item["id"] = ids[i]
+            item["name"] = name
+            if len(documents[i]) > 80:
+                item["document"] = documents[i][:77] + "..."
+                item["is_document_trunc"] = True
+            else:
+                item["document"] = documents[i]
+                item["is_document_trunc"] = False
+            res.append(item)
+    res.sort(key=lambda item: item["metadata"] is None)
+    print(res)
     return res
+
+
+def get_document(collection_name: str, document_id: str):
+    collection = http_client.get_collection(collection_name)
+    return collection.get(document_id)
 
 
 # 获取所有collection信息
