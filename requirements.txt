@@ -40,3 +40,5 @@ vllm>=0.5.0
 openpyxl
 pdfminer.six
 bcrypt==4.0.1
+xlrd>=2.0.1
+pptx

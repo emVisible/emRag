@@ -14,5 +14,3 @@ origins = ["http://127.0.0.1:5173"]
 #         consume_time = time() - start_time
 #         response.headers.append("X-Process-Time", str(consume_time))
 #         return response
-
-

@@ -14,7 +14,7 @@ from src.base.models import Base
 from src.init.controller import route_init
 from src.llm.controller import route_llm
 from src.rag.controller import route_rag
-from src.utils import log_msg, config_logger
+from src.utils import log_config, config_logger
 from src.vector_store.controller import route_vector
 
 
@@ -32,8 +32,8 @@ async def lifespan(app: FastAPI):
 
 def swagger_monkey_patch(*args, **kwargs):
     return get_swagger_ui_html(
-        swagger_js_url="https://cdn.bootcdn.net/ajax/libs/swaqqer-ui/5.6.2/swagqer-ui-bundle.js",
-        swagger_css_url="https://cdn.bootcdn.net/ajax/libs/swagger-ui/5.6.2/swagger-ui.min.css",
+        swagger_js_url="/assets/swagger.js",
+        swagger_css_url="/assets/swagger.css",
         *args,
         **kwargs
     )
@@ -41,7 +41,7 @@ def swagger_monkey_patch(*args, **kwargs):
 
 load_dotenv("./.env")
 # 打印配置信息
-log_msg()
+log_config()
 # 初始化数据库
 Base.metadata.create_all(bind=engine)
 # 初始化app实例

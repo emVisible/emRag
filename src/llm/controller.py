@@ -1,4 +1,4 @@
-from asyncio import Lock, Semaphore, sleep
+from asyncio import Lock,  sleep
 from json import dumps
 
 from fastapi import APIRouter, status
@@ -13,7 +13,6 @@ from .dto.chat import LLMChatDto
 
 route_llm = APIRouter(prefix="/llm")
 model_lock = Lock()
-semaphore = Semaphore(5)
 
 
 @route_llm.post(
@@ -35,7 +34,6 @@ async def chat(body: LLMChatDto):
             chat_history=chat_history,
             generate_config={
                 "stream": True,
-                "max_tokens": 1024,
             },
         )
 

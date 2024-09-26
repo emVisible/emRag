@@ -27,7 +27,7 @@
 
 所需依赖安装
 
-``` bash
+```bash
   pip install -r requirements.txt
 ```
 
@@ -50,7 +50,7 @@
 
 切换至对应环境
 
-``` bash
+```bash
   conda activate lexinaut
 ```
 
@@ -58,17 +58,17 @@
 
 Linux下启动
 
-``` bash
+```bash
   XINFERENCE_MODEL_SRC=modelscope xinference-local --host 0.0.0.0 --port 9997
 ```
 
 windows下启动
 
-``` shell
+```shell
   set XINFERENCE_MODEL_SRC=modelscope
 ```
 
-``` bash
+```bash
   xinference-local --host 127.0.0.1 --port 9997
 ```
 
@@ -78,7 +78,7 @@ windows下启动
 
 ### 项目
 
-``` bash
+```bash
   uvicorn main:app --port 3000 --reload
 ```
 
@@ -90,7 +90,7 @@ windows下启动
 
 ### GPU信息
 
-``` bash
+```bash
   watch nvidia-smi
 ```
 
@@ -99,21 +99,22 @@ windows下启动
 启动xinference时遇到报错:
 
 1. 升级gcc和g++到11版本
+
    - 针对llama_cpp_python成功安装但是xinference启动报错
 2. 手动下载llama_cpp_python
+
    - 遇到llama_cpp或者chaglm_cpp的whl问题, 需要前往chatglm_cpp和llama_cpp_python这两个github repo中手动下载对应版本, 并通过pip安装
 3. Xinference Web UI在模型的GPU Index选择时会有JS的Bug, 需要手动输入两次再点启动
 4. 服务器卡顿退出, 服务仍在运行时, 清除python程序:
 
-   ``` bash
+   ```bash
       ps -ef | grep python | grep -v grep | awk '{print $2}' | xargs kill -9
    ```
-
 5. torch与torchvision版本需要匹配: 0.23.0对应0.18.0
 
 ## 并发测试
 
-12线程400链接, 600秒测试
+使用wrk进行12线程400链接, 600秒测试
 
 LLM测试结果:
 GPU功率峰值可达280W, 平均在220W左右
@@ -121,16 +122,20 @@ GPU功率峰值可达280W, 平均在220W左右
 每秒在100对话并发情况下, 平均每个请求每秒响应10个字左右
 可处理1000个左右请求, 平均每秒处理1.7个对话请求 (每个回答大约有700左右的字数)
 
-``` bash
-  > wrk -t12 -c400 -d600 -s ./llm.lua http://127.0.0.1:3000/api/llm/chat
+```bash
+wrk -t12 -c400 -d600 -s ./llm.lua http://127.0.0.1:3000/api/llm/chat
+```
 
-  Running 10m test @ http://localhost:3000/api/llm/chat
-  12 threads and 400 connections
-  Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency     0.00us    0.00us   0.00us    -nan%
-    Req/Sec     0.24      0.96    10.00     95.09%
-  1039 requests in 10.00m, 6.64MB read
-  Socket errors: connect 0, read 0, write 0, timeout 1039
-  Requests/sec:      1.73
-  Transfer/sec:     11.33KB
+RAG测试结果：
+
+Rerank阶段，模型所在GPU( GPU1 )功率峰值基本跑满, 平均在330W左右
+
+回复阶段，模型所在GPU( GPU0 )功率峰值同上, 平均在320W左右
+
+双3090压力测试下, 平均响应约为1300tokens/s, 最高响应越为2700tokens/s
+
+由于受到结果Rerank的影响, 最多每秒同时响应波动较大, 从3-200 / s不等, 测试数据实际参考意义有限
+
+```bash
+wrk -t12 -c400 -d600 -s ./rag.lua http://127.0.0.1:3000/api/rag/chat
 ```

@@ -1,7 +1,8 @@
 local data = [[{
-  "prompt": "浙外章程第三十九条原文是什么？",
+  "prompt": "浙江外国语学院章程第五十条是什么",
   "system_prompt": "",
-  "chat_history": []
+  "chat_history": [],
+  "collection_name":"edu_c_1"
 }]]
 
 wrk.method = "POST"

@@ -1,12 +1,8 @@
 from enum import Enum
-from logging import INFO, CRITICAL, StreamHandler, getLogger, basicConfig
+from logging import CRITICAL, INFO, StreamHandler, basicConfig, getLogger
 from os import getenv
 from os.path import abspath, join
-from typing import Any, Optional, Union
-
 from colorlog import ColoredFormatter
-from fastapi import status
-from pydantic import BaseModel
 
 formatter = ColoredFormatter(
     "%(log_color)s%(levelname)-8s%(reset)s %(blue)s%(message)s",
@@ -18,7 +14,6 @@ formatter = ColoredFormatter(
         "CRITICAL": "bold_red",
     },
 )
-
 config_logger = getLogger("fastapi")
 config_logger.handlers.clear()
 console_handler = StreamHandler()
@@ -27,16 +22,28 @@ config_logger.setLevel(CRITICAL)
 config_logger.addHandler(console_handler)
 
 file_log = basicConfig(
-    filename='lexinaut.log',  # 输出日志文件
-    level=INFO,   # 日志级别
-    format='%(asctime)s - %(levelname)s - %(message)s'  # 日志格式
+    filename="lexinaut.log",  # 输出日志文件
+    level=INFO,  # 日志级别
+    format="%(asctime)s - %(levelname)s - %(message)s",  # 日志格式
 )
 
-# TODO: 路由使用response_model作为统一相应模型
-class ResponseModel(BaseModel):
-    data: Optional[Union[str, Any]] = None
-    code: int = status.HTTP_200_OK
-    msg: str = "ok"
+
+# 路由标签
+class Tags(Enum):
+    dev = "DEV"
+    rag = "RAG"
+    llm = "LLM"
+    user = "User"
+    auth = "Auth"
+    vector_db = "Vector Database"
+    init = "Initialization"
+
+
+class SystemTags(Enum):
+    project = "[Project]"
+    auth = "[Auth]"
+    vector = "[Vector]"
+    model = "[Model]"
 
 
 def log(text: str):
@@ -50,40 +57,33 @@ def log(text: str):
     return outer
 
 
-def log_msg():
+def log_config():
+    project = SystemTags.project.value
+    auth = SystemTags.auth.value
+    vector = SystemTags.vector.value
+    model = SystemTags.model.value
     env_path = join(abspath("./"), ".env")
-    config_logger.critical(f"[AUTH-ALGORITHM] {getenv('ALGORITHM')}")
-    config_logger.critical(f"[AUTH-SECRET KEY] {getenv('SECRET_KEY')}")
-    config_logger.critical(
-        f"[AUTH-ACCESS TOKEN EXPIRE TIME] {getenv('ACCESS_TOKEN_EXPIRE_MINUTES')}"
-    )
-    config_logger.critical(f"[PATH-ROOT] {env_path}")
-    config_logger.critical(f"[PATH-DB] {getenv('DB_ADDR')}")
-    config_logger.critical(f"[PATH-DOC] {getenv('DOC_ADDR')}")
-
-    config_logger.critical(f"[RAG-PARAM] k: {getenv('K')}")
-    config_logger.critical(f"[RAG-PARAM] chunk_size: {getenv('CHUNK_SIZE')}")
-    config_logger.critical(f"[RAG-PARAM] chunk_overlap: {getenv('CHUNK_OVERLAP')}")
-
-    config_logger.critical(f"[XINFERENCE] xinference url: {getenv('XINFERENCE_ADDR')}")
-    config_logger.critical(
-        f"[XINFERENCE] xinference llm model id: {getenv('XINFERENCE_LLM_MODEL_ID')}"
-    )
-    config_logger.critical(
-        f"[XINFERENCE] xinference embedding model id: {getenv('XINFERENCE_EMBEDDING_MODEL_ID')}"
-    )
-    config_logger.critical(
-        f"[XINFERENCE] xinference rerank model id: {getenv('XINFERENCE_RERANK_MODEL_ID')}"
-    )
-    config_logger.critical(f"[VECTOR_DATABASE] chroma url: {getenv('CHROMA_ADDR')}")
-
-
-# 路由标签
-class Tags(Enum):
-    dev = "DEV"
-    rag = "RAG"
-    llm = "LLM"
-    user = "User"
-    auth = "Auth"
-    vector_db = "Vector Database"
-    init = "Initialization"
+    config_logger.critical(f"[{project}]-[ENV_PATH]-{env_path}")
+    configs = [
+        {"name": "ENV_PATH", "tags": project},
+        {"name": "ALGORITHM", "tags": auth},
+        {"name": "SECRECT_KEY", "tags": auth},
+        {"name": "ACCESS_TOKEN_EXPIRE_MINUTES", "tags": auth},
+        {"name": "DB_ADDR", "tags": vector},
+        {"name": "DOC_ADDR", "tags": vector},
+        {"name": "CHROMA_ADDR", "tags": vector},
+        {"name": "K", "tags": vector},
+        {"name": "ALLOW_RESET", "tags": vector},
+        {"name": "MIN_RELEVANCE_SCORE", "tags": vector},
+        {"name": "XINFERENCE_ADDR", "tags": model},
+        {"name": "XINFERENCE_LLM_MODEL_ID", "tags": model},
+        {"name": "XINFERENCE_EMBEDDING_MODEL_ID", "tags": model},
+        {"name": "XINFERENCE_RERANK_MODEL_ID", "tags": model},
+        {"name": "CHUNK_SIZE", "tags": model},
+        {"name": "CHUNK_OVERLAP", "tags": model},
+        {"name": "MAX_MODEL_LEN", "tags": model},
+    ]
+    for config in configs:
+        tag = config["tags"]
+        name = config["name"]
+        config_logger.critical(f"[{tag}]-[{name}]: {getenv(name)}")

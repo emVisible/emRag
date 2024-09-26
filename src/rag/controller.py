@@ -45,10 +45,10 @@ async def search(body: RAGChatDto):
         res = llm_model.chat(
             prompt=prompt,
             system_prompt=system_prompt_rag,
-            chat_history=chat_history,
+            chat_history=[],
             generate_config={
                 "stream": True,
-                "max_tokens": 1024,
+                "max_tokens": 4096,
             },
         )
     async def streaming_response_iterator():

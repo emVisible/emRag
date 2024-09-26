@@ -33,17 +33,20 @@ def get_collection_names():
 def collection_get_detail(name: str):
     collection = http_client.get_collection(name)
     raw = collection.get()
-    res = []
+    res = {}
+    res["data"] = []
+    res["metadata"] = {}
     name = collection.name
     documents = raw["documents"]
     ids = raw["ids"]
     metadatas = raw["metadatas"]
+    res["metadata"]["collection_name"] = name
     for i in range(1, len(ids)):
         item = {}
         if not metadatas[i]:
             continue
         else:
-            item["metadata"] = metadatas[i]["source"].split("/")[-1]
+            item["source"] = metadatas[i]["source"].split("/")[-1]
             item["id"] = ids[i]
             item["name"] = name
             if len(documents[i]) > 80:
@@ -52,8 +55,8 @@ def collection_get_detail(name: str):
             else:
                 item["document"] = documents[i]
                 item["is_document_trunc"] = False
-            res.append(item)
-    res.sort(key=lambda item: item["metadata"] is None)
+            res["data"].append(item)
+    res["data"].sort(key=lambda item: item["source"] is None)
     print(res)
     return res
 
