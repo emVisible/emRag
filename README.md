@@ -1,4 +1,5 @@
 # LexiNaut
+> 此版本已经不再更新，最新版已移至[Ametrine](https://github.com/emVisible/Ametrine)
 
 基于LangChain + Xinference + Chroma构建的本地知识库项目
 
